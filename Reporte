@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reporte de Servicio Técnico</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --accent: #1f6feb;
+      --border: #d0d7de;
+      --text: #0f172a;
+      --muted: #475569;
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .container {
+      width: min(960px, 100%);
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+      padding: clamp(24px, 4vw, 48px);
+    }
+
+    header {
+      display: grid;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      gap: clamp(16px, 3vw, 32px);
+      flex-wrap: wrap;
+    }
+
+    .header-text {
+      flex: 1;
+      min-width: min(360px, 100%);
+    }
+
+    .logo-wrapper {
+      display: grid;
+      justify-items: center;
+    }
+
+    .logo-figure {
+      margin: 0;
+      padding: 12px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: #ffffff;
+      width: clamp(180px, 26vw, 240px);
+      display: grid;
+      gap: 12px;
+      justify-items: center;
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+    }
+
+    .logo-figure svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .logo-caption {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      font-weight: 600;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: clamp(1.75rem, 2.8vw, 2.5rem);
+      margin: 0;
+      color: var(--accent);
+    }
+
+    header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    form {
+      display: grid;
+      gap: 24px;
+    }
+
+    .field-group {
+      display: grid;
+      gap: 12px;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-weight: 600;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    input,
+    textarea,
+    select,
+    button {
+      font: inherit;
+    }
+
+    input,
+    textarea,
+    select,
+    .file-input {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 12px 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      background: rgba(255, 255, 255, 0.9);
+      color: inherit;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus,
+    .file-input:focus-visible {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(31, 111, 235, 0.15);
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    .signature-card,
+    .photos-card {
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      background: rgba(15, 23, 42, 0.02);
+      display: grid;
+      gap: 16px;
+    }
+
+    .signature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 24px;
+    }
+
+    .signature-block {
+      display: grid;
+      gap: 12px;
+    }
+
+    .signature-block h3 {
+      margin: 0;
+      font-size: 1rem;
+      color: var(--accent);
+    }
+
+    .signature-area {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #ffffff;
+      position: relative;
+      overflow: hidden;
+    }
+
+    canvas {
+      width: 100%;
+      height: 220px;
+      display: block;
+      touch-action: none;
+    }
+
+    .signature-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+
+    .signature-actions button,
+    .actions button {
+      border: none;
+      border-radius: 999px;
+      padding: 12px 20px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .signature-actions button:hover,
+    .actions button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
+    }
+
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #1e293b;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #ffffff;
+    }
+
+    .photos-card input[type="file"] {
+      border: none;
+      padding: 0;
+    }
+
+    .photo-preview {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 16px;
+    }
+
+    .photo-card {
+      background: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      display: grid;
+      gap: 8px;
+      padding-bottom: 12px;
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+    }
+
+    .photo-card img {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+    }
+
+    .photo-card figcaption {
+      padding: 0 12px;
+      font-size: 0.85rem;
+      color: var(--muted);
+      word-break: break-word;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 16px;
+      }
+
+      .header-top {
+        justify-content: center;
+        text-align: center;
+      }
+
+      .header-text {
+        min-width: 100%;
+      }
+
+      .signature-actions {
+        justify-content: stretch;
+      }
+
+      .signature-actions button,
+      .actions button {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header>
+      <div class="header-top">
+        <div class="logo-wrapper">
+          <figure class="logo-figure">
+            <svg
+              viewBox="0 0 640 220"
+              role="img"
+              aria-labelledby="logoTitle logoDesc"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <title id="logoTitle">Bennu Healthcare Solutions</title>
+              <desc id="logoDesc">Marca fija de Bennu Healthcare Solutions</desc>
+              <rect x="0" y="0" width="220" height="220" rx="24" fill="#2966c6" />
+              <path
+                d="M36 50c40-28 82 20 120-6M32 108c42-26 86 24 124-6M38 166c42-24 86 24 126-4"
+                fill="none"
+                stroke="#ffffff"
+                stroke-width="14"
+                stroke-linecap="round"
+              />
+              <text
+                x="260"
+                y="110"
+                font-family="'Inter', 'Segoe UI', sans-serif"
+                font-size="80"
+                font-weight="700"
+                fill="#1f6feb"
+              >
+                Bennu
+              </text>
+              <text
+                x="260"
+                y="160"
+                font-family="'Inter', 'Segoe UI', sans-serif"
+                font-size="40"
+                fill="#475569"
+              >
+                Healthcare Solutions
+              </text>
+            </svg>
+            <figcaption class="logo-caption">Identidad corporativa</figcaption>
+          </figure>
+        </div>
+        <div class="header-text">
+          <h1>Reporte de Servicio Técnico</h1>
+          <p>
+            Complete la información para generar un reporte profesional, listo para firmar,
+            agregar fotos y exportar a PDF.
+          </p>
+        </div>
+      </div>
+    </header>
+
+    <form id="report-form">
+      <section class="field-group">
+        <h2>Datos generales</h2>
+        <div class="field-grid">
+          <label>
+            Fecha
+            <input type="date" id="date" name="date" required />
+          </label>
+          <label>
+            Centro médico
+            <input type="text" id="medical-center" name="medicalCenter" placeholder="Ej: Clínica Buen Salud" required />
+          </label>
+          <label>
+            Equipo
+            <input type="text" id="equipment" name="equipment" placeholder="Ej: Monitor multiparámetro" required />
+          </label>
+          <label>
+            Modelo
+            <input type="text" id="model" name="model" placeholder="Ej: MX-500" required />
+          </label>
+          <label>
+            Serie
+            <input type="text" id="serial" name="serial" placeholder="Ej: SN-001234" required />
+          </label>
+          <label>
+            Actuaciones
+            <select id="actions" name="actions" required>
+              <option value="">Seleccione una opción</option>
+              <option>Mtto Correctivo</option>
+              <option>Mtto Preventivo</option>
+              <option>Instalación de Repuestos</option>
+              <option>Otro</option>
+            </select>
+          </label>
+          <label>
+            Ingeniero
+            <input type="text" id="engineer" name="engineer" placeholder="Ej: Ing. Juan Pérez" required />
+          </label>
+        </div>
+      </section>
+
+      <section class="field-group">
+        <h2>Detalle del servicio</h2>
+        <label>
+          Trabajo realizado
+          <textarea id="work-done" name="workDone" placeholder="Describa las actividades realizadas y los hallazgos más relevantes" required></textarea>
+        </label>
+        <label>
+          Observaciones o recomendaciones
+          <textarea id="observations" name="observations" placeholder="Incluya recomendaciones, pendientes u observaciones para el cliente"></textarea>
+        </label>
+      </section>
+
+      <section class="field-group photos-card">
+        <div>
+          <h2>Fotografías</h2>
+          <p style="margin: 0; color: var(--muted); font-size: 0.9rem;">Seleccione una o varias imágenes para ilustrar el trabajo realizado. Se admitirán archivos en formato PNG o JPG.</p>
+        </div>
+        <label class="file-input">
+          Adjuntar fotos
+          <input type="file" id="photos" name="photos" accept="image/*" multiple />
+        </label>
+        <div id="photo-preview" class="photo-preview" aria-live="polite"></div>
+      </section>
+
+      <section class="field-group signature-card">
+        <div>
+          <h2>Firmas digitales</h2>
+          <p style="margin: 0; color: var(--muted); font-size: 0.9rem;">Firme dentro del recuadro con el mouse o con el dedo si utiliza un dispositivo táctil.</p>
+        </div>
+        <div class="signature-grid">
+          <article class="signature-block">
+            <h3>Cliente</h3>
+            <div class="signature-area">
+              <canvas id="client-signature-canvas"></canvas>
+            </div>
+            <div class="signature-actions">
+              <button type="button" class="btn-secondary" id="clear-client-signature">Borrar firma del cliente</button>
+            </div>
+          </article>
+          <article class="signature-block">
+            <h3>Ingeniero</h3>
+            <div class="signature-area">
+              <canvas id="engineer-signature-canvas"></canvas>
+            </div>
+            <div class="signature-actions">
+              <button type="button" class="btn-secondary" id="clear-engineer-signature">Borrar firma del ingeniero</button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="actions">
+        <button type="reset" class="btn-secondary">Limpiar formulario</button>
+        <button type="button" class="btn-primary" id="download-pdf">Descargar reporte en PDF</button>
+      </section>
+    </form>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script>
+    const form = document.getElementById('report-form');
+    const dateInput = document.getElementById('date');
+    const photoInput = document.getElementById('photos');
+    const photoPreview = document.getElementById('photo-preview');
+    const downloadButton = document.getElementById('download-pdf');
+
+    const signatureConfigs = [
+      {
+        pdfLabel: 'Firma del cliente',
+        canvas: document.getElementById('client-signature-canvas'),
+        clearButton: document.getElementById('clear-client-signature')
+      },
+      {
+        pdfLabel: 'Firma del ingeniero',
+        canvas: document.getElementById('engineer-signature-canvas'),
+        clearButton: document.getElementById('clear-engineer-signature')
+      }
+    ];
+
+    signatureConfigs.forEach((config) => {
+      config.pad = new SignaturePad(config.canvas, {
+        backgroundColor: 'rgba(255, 255, 255, 1)',
+        penColor: '#0f172a'
+      });
+    });
+
+    const resizeAllCanvases = () => {
+      const ratio = Math.max(window.devicePixelRatio || 1, 1);
+      signatureConfigs.forEach(({ canvas, pad }) => {
+        const data = pad.toData();
+        const { offsetWidth, offsetHeight } = canvas;
+        canvas.width = offsetWidth * ratio;
+        canvas.height = offsetHeight * ratio;
+        canvas.getContext('2d').scale(ratio, ratio);
+        pad.clear();
+        if (data.length) {
+          pad.fromData(data);
+        }
+      });
+    };
+
+    const ensureToday = () => {
+      const today = new Date();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      dateInput.value = `${today.getFullYear()}-${month}-${day}`;
+    };
+
+    const readFileAsDataURL = (file) =>
+      new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve({ name: file.name, dataUrl: reader.result });
+        reader.onerror = () => reject(new Error(`No se pudo leer el archivo ${file.name}`));
+        reader.readAsDataURL(file);
+      });
+
+    const renderPhotoPreview = (files) => {
+      photoPreview.innerHTML = '';
+      if (!files.length) {
+        const emptyMessage = document.createElement('p');
+        emptyMessage.textContent = 'No se han seleccionado fotografías.';
+        emptyMessage.style.margin = '0';
+        emptyMessage.style.color = 'var(--muted)';
+        emptyMessage.style.fontSize = '0.9rem';
+        photoPreview.appendChild(emptyMessage);
+        return;
+      }
+
+      files.forEach((file) => {
+        if (!file.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const card = document.createElement('figure');
+          card.className = 'photo-card';
+          card.innerHTML = `
+            <img src="${event.target.result}" alt="Fotografía adjunta" />
+            <figcaption>${file.name}</figcaption>
+          `;
+          photoPreview.appendChild(card);
+        };
+        reader.readAsDataURL(file);
+      });
+    };
+
+    const createPdf = async () => {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const margin = 20;
+      const lineHeight = 6;
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      let cursorY = margin;
+
+      const drawBranding = () => {
+        const brandX = margin;
+        const brandY = margin;
+        const squareSize = 24;
+        const textX = brandX + squareSize + 8;
+
+        pdf.setFillColor(41, 102, 198);
+        pdf.roundedRect(brandX, brandY, squareSize, squareSize, 2, 2, 'F');
+
+        pdf.setDrawColor(255, 255, 255);
+        pdf.setLineWidth(1.4);
+        pdf.line(brandX + 4, brandY + 7, brandX + squareSize - 4, brandY + 5);
+        pdf.line(brandX + 4, brandY + 12, brandX + squareSize - 4, brandY + 14);
+        pdf.line(brandX + 4, brandY + squareSize - 6, brandX + squareSize - 4, brandY + squareSize - 8);
+
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(16);
+        pdf.setTextColor(31, 111, 235);
+        pdf.text('Bennu', textX, brandY + 12);
+
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(9);
+        pdf.setTextColor(71, 85, 105);
+        pdf.text('Healthcare Solutions', textX, brandY + 18);
+
+        pdf.setTextColor(15, 23, 42);
+        cursorY = Math.max(cursorY, brandY + squareSize) + 10;
+      };
+
+      drawBranding();
+
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(18);
+      pdf.setTextColor(31, 111, 235);
+      pdf.text('Reporte de Servicio Técnico', margin, cursorY);
+      cursorY += 12;
+
+      pdf.setTextColor(15, 23, 42);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(11);
+
+      const addSection = (label, value) => {
+        const text = value ? String(value).trim() : 'N/A';
+        const content = pdf.splitTextToSize(text || 'N/A', pageWidth - margin * 2);
+        const sectionHeight = lineHeight + content.length * lineHeight + 4;
+        ensureSpace(sectionHeight);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(15, 23, 42);
+        pdf.text(`${label}:`, margin, cursorY);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(content, margin, cursorY + lineHeight);
+        cursorY += sectionHeight;
+      };
+
+      const ensureSpace = (spaceNeeded) => {
+        if (cursorY + spaceNeeded > pageHeight - margin) {
+          pdf.addPage();
+          cursorY = margin;
+        }
+      };
+
+      addSection('Fecha', dateInput.value);
+      addSection('Centro médico', document.getElementById('medical-center').value);
+      addSection('Equipo', document.getElementById('equipment').value);
+      addSection('Modelo', document.getElementById('model').value);
+      addSection('Serie', document.getElementById('serial').value);
+      addSection('Actuaciones', document.getElementById('actions').value);
+      addSection('Ingeniero', document.getElementById('engineer').value);
+      addSection('Trabajo realizado', document.getElementById('work-done').value);
+      addSection('Observaciones / Recomendaciones', document.getElementById('observations').value);
+
+      const addSignatureToPdf = (label, pad) => {
+        if (pad.isEmpty()) return;
+        const signatureData = pad.toDataURL('image/png');
+        const { width, height } = pdf.getImageProperties(signatureData);
+        const availableWidth = pageWidth - margin * 2;
+        const maxHeight = 60;
+        let drawWidth = availableWidth;
+        let drawHeight = (height * drawWidth) / width;
+        if (drawHeight > maxHeight) {
+          drawHeight = maxHeight;
+          drawWidth = (width * drawHeight) / height;
+        }
+        ensureSpace(drawHeight + 16);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(`${label}:`, margin, cursorY);
+        cursorY += lineHeight;
+        pdf.addImage(signatureData, 'PNG', margin, cursorY, drawWidth, drawHeight);
+        cursorY += drawHeight + 8;
+      };
+
+      signatureConfigs.forEach(({ pdfLabel, pad }) => addSignatureToPdf(pdfLabel, pad));
+
+      const imageFiles = Array.from(photoInput.files || []).filter((file) => file.type.startsWith('image/'));
+      if (imageFiles.length) {
+        const images = await Promise.all(imageFiles.map(readFileAsDataURL));
+        images.forEach((image, index) => {
+          const { width, height } = pdf.getImageProperties(image.dataUrl);
+          const maxWidth = pageWidth - margin * 2;
+          const maxHeight = 120;
+          let drawWidth = maxWidth;
+          let drawHeight = (height * drawWidth) / width;
+          if (drawHeight > maxHeight) {
+            drawHeight = maxHeight;
+            drawWidth = (width * drawHeight) / height;
+          }
+          ensureSpace(drawHeight + 18);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text(`Fotografía ${index + 1}`, margin, cursorY);
+          cursorY += lineHeight;
+          pdf.addImage(image.dataUrl, 'PNG', margin, cursorY, drawWidth, drawHeight);
+          cursorY += drawHeight + 4;
+          if (image.name) {
+            pdf.setFont('helvetica', 'normal');
+            const caption = pdf.splitTextToSize(image.name, pageWidth - margin * 2);
+            pdf.text(caption, margin, cursorY);
+            cursorY += caption.length * lineHeight + 4;
+          }
+        });
+      }
+
+      pdf.save(`Reporte-${dateInput.value || 'servicio'}.pdf`);
+    };
+
+    photoInput.addEventListener('change', (event) => {
+      const files = Array.from(event.target.files || []);
+      const imageFiles = files.filter((file) => file.type.startsWith('image/'));
+      renderPhotoPreview(imageFiles);
+    });
+
+    signatureConfigs.forEach(({ clearButton, pad }) => {
+      clearButton.addEventListener('click', () => {
+        pad.clear();
+      });
+    });
+
+    downloadButton.addEventListener('click', async () => {
+      if (!form.reportValidity()) {
+        return;
+      }
+      downloadButton.disabled = true;
+      downloadButton.textContent = 'Generando PDF...';
+      try {
+        await createPdf();
+      } catch (error) {
+        alert(error.message || 'Ocurrió un error al generar el PDF.');
+      } finally {
+        downloadButton.disabled = false;
+        downloadButton.textContent = 'Descargar reporte en PDF';
+      }
+    });
+
+    form.addEventListener('reset', () => {
+      setTimeout(() => {
+        signatureConfigs.forEach(({ pad }) => pad.clear());
+        photoPreview.innerHTML = '';
+        ensureToday();
+      }, 0);
+    });
+
+    window.addEventListener('resize', resizeAllCanvases);
+
+    window.addEventListener('load', () => {
+      ensureToday();
+      resizeAllCanvases();
+      renderPhotoPreview([]);
+    });
+  </script>
+</body>
+</html>
