@@ -105,7 +105,7 @@
 
           <h3 class="muted">Equipo atendido</h3>
           <div class="grid-3">
-            <div><label>EQUIPO</label><input type="text" id="equipo" placeholder="Ej. Monitor Multiparámetro" /></div>
+            <div><label>Equipo</label><input type="text" id="equipo" placeholder="Ej. Monitor Multiparámetro" /></div>
             <div><label>Marca</label><input type="text" id="marca" required /></div>
             <div><label>Modelo</label><input type="text" id="modelo" required /></div>
           </div>
@@ -194,7 +194,7 @@
         </div>
       </section>
     </div>
-    <p class="footer">PDF: marco sobrio, logo grande, cabecera empresa, DATOS DEL CLIENTE, EQUIPO ATENDIDO (incluye EQUIPO), ACTUACIONES/CANTIDAD, Observaciones, IMÁGENES (Foto 1 inmediatamente), resto de fotos y firma.</p>
+    <p class="footer">PDF: marco sobrio, logo grande, cabecera, DATOS DEL CLIENTE, EQUIPO ATENDIDO, ACTUACIONES/CANTIDAD, Observaciones, IMÁGENES (Foto 1 inmediatamente), resto de fotos y firma.</p>
   </main>
 
   <!-- jsPDF -->
@@ -218,7 +218,7 @@
     const HEADER = {
       company: 'Bennu Healthcare Solutions',
       legalId: '3-101804878',
-      address: 'Uruca, San José, Costa Rica',
+      address: 'Uruca, San José',
       email: 'serviciotecncio@bennucr.com',
       phone: '6037-4749'
     };
@@ -341,6 +341,7 @@
       const dif = m2 - m1; return Math.floor(dif/60)+':'+pad2(dif%60);
     }
     function escapeHTML(str=''){ return str.replace(/[&<>\"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+    function sanitizeName(s=''){ return (s||'').toString().trim().replace(/[^a-z0-9\-_]+/gi,'_'); }
 
     /* ===== Form data ===== */
     function formDataToObj(asignarConsecutivo){
@@ -575,12 +576,25 @@
       doc.setDrawColor(200,210,230); doc.line(M, 820, 595-M, 820);
       doc.setFontSize(8); doc.setTextColor(120,140,170); doc.text('Generado localmente — sin Service Worker.', M, 834);
 
-      // Descarga / iOS
-      const nombre = `OT_${String(obj.consecutivo).padStart(5,'0')}_${(obj.cliente||'Cliente').replace(/[^a-z0-9\-_]+/gi,'_')}.pdf`;
-      const blobUrl = doc.output('bloburl');
+      // ====== DESCARGA con NOMBRE CORRECTO (iOS y demás) ======
+      const equipoName = sanitizeName(obj.equipo || `${obj.marca||''}_${obj.modelo||''}` || 'Equipo');
+      const nombre = `OT_${String(obj.consecutivo).padStart(5,'0')}_${equipoName}.pdf`;
+
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      if (isIOS) { window.open(blobUrl, '_blank'); }
-      else { const a=document.createElement('a'); a.href=blobUrl; a.download=nombre; document.body.appendChild(a); a.click(); a.remove(); }
+      if (isIOS) {
+        // iOS Safari respeta mejor el nombre con save()
+        doc.save(nombre);
+      } else {
+        const blob = doc.output('blob'); // Blob real
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = nombre;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(()=> URL.revokeObjectURL(url), 1500);
+      }
     }
 
     /* ===== Exportar/Importar ===== */
