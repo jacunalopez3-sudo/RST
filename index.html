@@ -40,7 +40,7 @@
     .firma-wrap{margin-top:16px}
     canvas#sigPad{
       width:100%;
-      height:48vh;               /* alto responsivo */
+      height:48vh;
       max-height:520px;
       min-height:320px;
       background:#0f1732;
@@ -102,14 +102,13 @@
 
           <h3 class="muted">Equipo atendido</h3>
           <div class="grid-3">
+            <div><label>EQUIPO</label><input type="text" id="equipo" placeholder="Ej. Monitor Multiparámetro" /></div>
             <div><label>Marca</label><input type="text" id="marca" required /></div>
             <div><label>Modelo</label><input type="text" id="modelo" required /></div>
-            <div><label>N° de serie</label><input type="text" id="serie" required /></div>
           </div>
-
-          <div class="grid-2">
-            <div>
-              <label>Actuación</label>
+          <div class="grid-3">
+            <div><label>N° de serie</label><input type="text" id="serie" required /></div>
+            <div><label>Actuación</label>
               <select id="actuacion">
                 <option>Mtto Preventivo</option>
                 <option>Mtto Correctivo</option>
@@ -123,8 +122,7 @@
             </div>
           </div>
 
-          <label>Descripción de falla / solicitud</label>
-          <textarea id="falla" required></textarea>
+          <!-- (Eliminado) Descripción de falla / solicitud -->
 
           <label>Observaciones / diagnóstico</label>
           <textarea id="acciones" required></textarea>
@@ -193,7 +191,7 @@
         </div>
       </section>
     </div>
-    <p class="footer">PDF: logo grande, cabecera empresa, DATOS DEL CLIENTE, EQUIPO ATENDIDO, ACTUACIONES/CANTIDAD, **Descripción de falla**, Observaciones, fotos y firma.</p>
+    <p class="footer">PDF: logo grande, cabecera empresa, DATOS DEL CLIENTE, EQUIPO ATENDIDO (incluye EQUIPO), ACTUACIONES/CANTIDAD, Observaciones, fotos y firma.</p>
   </main>
 
   <!-- jsPDF -->
@@ -298,7 +296,7 @@
       for (const f of files){
         if (fotosDataURLs.length >= MAX_FOTOS) { toast('Límite de 10 fotos alcanzado'); break; }
         const url = await fileToDataURL(f);
-        const compressed = await compressDataUrl(url, 1600, 0.72); // compresión automática
+        const compressed = await compressDataUrl(url, 1600, 0.72);
         fotosDataURLs.push(compressed);
       }
       refreshThumbs();
@@ -353,9 +351,11 @@
         id, consecutivo,
         fecha:get('fecha'), horaIni:get('horaIni'), horaFin:get('horaFin'), duracion:dur,
         cliente:get('cliente'), responsable:get('responsable'), telefono:get('telefono'),
+        equipo:get('equipo'),
         marca:get('marca'), modelo:get('modelo'), serie:get('serie'),
         actuacion:get('actuacion'), cantidad:get('cantidad'),
-        falla:get('falla'), acciones:get('acciones'),
+        /* eliminado: falla */
+        acciones:get('acciones'),
         repuestos:get('repuestos'), horas:get('horas'), estado:get('estado'),
         fotos:[...fotosDataURLs], logo:(logoDataURL || getLogoFijo()), firma
       };
@@ -367,6 +367,7 @@
         cliente: document.getElementById('cliente').value.trim(),
         responsable: document.getElementById('responsable').value.trim(),
         telefono: document.getElementById('telefono').value.trim(),
+        equipo: document.getElementById('equipo').value.trim(),
         marca: document.getElementById('marca').value.trim(),
         modelo: document.getElementById('modelo').value.trim(),
         serie: document.getElementById('serie').value.trim(),
@@ -379,13 +380,13 @@
       document.getElementById('cliente').value = keep.cliente;
       document.getElementById('responsable').value = keep.responsable;
       document.getElementById('telefono').value = keep.telefono;
+      document.getElementById('equipo').value = keep.equipo;
       document.getElementById('marca').value = keep.marca;
       document.getElementById('modelo').value = keep.modelo;
       document.getElementById('serie').value = keep.serie;
       document.getElementById('actuacion').value = keep.actuacion;
       document.getElementById('cantidad').value = keep.cantidad;
       document.getElementById('estado').value = keep.estado;
-      document.getElementById('falla').value = '';
       document.getElementById('acciones').value = '';
       document.getElementById('repuestos').value = '';
       document.getElementById('horas').value = '';
@@ -403,12 +404,12 @@
       document.getElementById('cliente').value = r.cliente;
       document.getElementById('responsable').value = r.responsable;
       document.getElementById('telefono').value = r.telefono || '';
+      document.getElementById('equipo').value = r.equipo || '';
       document.getElementById('marca').value = r.marca;
       document.getElementById('modelo').value = r.modelo;
       document.getElementById('serie').value = r.serie;
       document.getElementById('actuacion').value = r.actuacion || 'Mtto Preventivo';
       document.getElementById('cantidad').value = r.cantidad || '1';
-      document.getElementById('falla').value = r.falla;
       document.getElementById('acciones').value = r.acciones;
       document.getElementById('repuestos').value = r.repuestos || '';
       document.getElementById('horas').value = r.horas || '';
@@ -448,7 +449,7 @@
       }));
     }
 
-    /* ===== PDF (incluye EQUIPO ATENDIDO y FALLA antes de OBSERVACIONES) ===== */
+    /* ===== PDF (sin FALLA; incluye EQUIPO en EQUIPO ATENDIDO) ===== */
     function generarPDF(sourceObj){
       const obj = sourceObj || formDataToObj(true); // asigna consecutivo definitivo aquí
       const { jsPDF } = window.jspdf;
@@ -485,10 +486,11 @@
       y += 16; doc.text(`Responsable: ${obj.responsable || '-'}`, M, y);
       if (obj.telefono){ y += 16; doc.text(`Teléfono: ${obj.telefono}`, M, y); }
 
-      // EQUIPO ATENDIDO
+      // EQUIPO ATENDIDO (con EQUIPO)
       y += 12; doc.setDrawColor(100,120,150); doc.line(M, y, 595-M, y);
       y += 18; doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('EQUIPO ATENDIDO', M, y);
       doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      y += 16; doc.text(`Equipo: ${obj.equipo || '-'}`, M, y);
       y += 16; doc.text(`Marca:  ${obj.marca || '-'}`, M, y);
       y += 16; doc.text(`Modelo: ${obj.modelo || '-'}`, M, y);
       y += 16; doc.text(`Serie:  ${obj.serie || '-'}`, M, y);
@@ -501,18 +503,10 @@
       doc.text(String(obj.actuacion || '-'), M, y);
       doc.text(String(obj.cantidad || '1'),  595-M, y, { align:'right' });
 
-      /* ===== NUEVO: Descripción de falla / solicitud ===== */
-      y += 16; doc.setDrawColor(100,120,150); doc.line(M, y, 595-M, y);
-      y += 18; doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('Descripción de falla / solicitud:', M, y);
-      y += 14; doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      const fallaLines = doc.splitTextToSize(obj.falla || '-', 595 - 2*M);
-      for (const line of fallaLines){
-        if (y > doc.internal.pageSize.getHeight() - 80){ doc.addPage(); y = M; }
-        doc.text(line, M, y); y += 12;
-      }
+      // (Eliminado) Bloque de Falla
 
-      // Observaciones (después de Falla)
-      if (y < doc.internal.pageSize.getHeight() - 80){ y += 6; doc.setDrawColor(100,120,150); doc.line(M, y, 595-M, y); }
+      // Observaciones
+      y += 16; doc.setDrawColor(100,120,150); doc.line(M, y, 595-M, y);
       y += 18; doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('Observaciones:', M, y);
       y += 14; doc.setFont('helvetica','normal'); doc.setFontSize(10);
       const obsLines = doc.splitTextToSize(obj.acciones || '-', 595 - 2*M);
