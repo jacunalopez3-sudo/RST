@@ -36,7 +36,17 @@
     .thumbs img{width:100%;height:74px;object-fit:cover;border-radius:10px;border:1px solid var(--border)}
     .thumbs .tag{position:absolute;left:6px;top:6px;background:#0009;padding:2px 6px;border-radius:8px;font-size:.75rem}
     .thumbs .del{position:absolute;right:6px;top:6px;background:#c0392b;border:none;border-radius:50%;width:22px;height:22px;color:#fff;cursor:pointer}
-    canvas#sigPad{width:100%;height:170px;background:#0f1732;border:1px dashed #2c3b6a;border-radius:12px}
+    /* Firma GRANDE (casi pantalla) */
+    .firma-wrap{margin-top:16px}
+    canvas#sigPad{
+      width:100%;
+      height:48vh;               /* alto responsivo ~ media pantalla */
+      max-height:520px;          /* límite en desktop */
+      min-height:320px;          /* suficientemente grande en móviles */
+      background:#0f1732;
+      border:2px dashed #2c3b6a;
+      border-radius:14px
+    }
     table{width:100%;border-collapse:collapse}
     th,td{padding:10px;border-bottom:1px solid var(--border);text-align:left}
     th{color:var(--muted);font-weight:600}
@@ -134,7 +144,6 @@
           </div>
 
           <label>Fotografías (hasta 10) — cámara o carrete</label>
-          <!-- Sin capture: permite cámara y galería/carrete -->
           <input type="file" id="fotos" accept="image/*" multiple />
           <div class="btns">
             <button type="button" id="addMore" class="btn">Añadir fotos</button>
@@ -149,15 +158,18 @@
               <input type="file" id="logo" accept="image/*" />
               <div class="btns"><button type="button" id="fijarLogo" class="btn">Guardar logo como fijo</button></div>
             </div>
-            <div>
-              <label>Firma del cliente</label>
-              <canvas id="sigPad"></canvas>
-              <div class="btns"><button type="button" id="limpiarFirma" class="btn">Limpiar firma</button></div>
-            </div>
+            <div></div>
+          </div>
+
+          <!-- FIRMA GRANDE EXACTAMENTE ANTES DE LOS BOTONES -->
+          <div class="firma-wrap">
+            <label>Firma del cliente (trazo grande)</label>
+            <canvas id="sigPad"></canvas>
+            <div class="btns"><button type="button" id="limpiarFirma" class="btn">Limpiar firma</button></div>
           </div>
 
           <div class="btns">
-            <button type="button" class="primary" id="guardar">Guardar local</button>
+            <!-- Eliminado "Guardar local" -->
             <button type="button" class="success" id="pdf">Generar PDF</button>
             <button type="reset" id="resetForm" class="danger">Limpiar formulario</button>
           </div>
@@ -165,12 +177,12 @@
         </form>
       </section>
 
-      <!-- Lista -->
+      <!-- Lista (puedes ocultarla si no guardas nada) -->
       <section class="card">
         <h2>Reportes guardados</h2>
         <table>
           <thead><tr><th>Reporte</th><th>Fecha</th><th>Cliente</th><th>Equipo</th><th class="right">Acciones</th></tr></thead>
-          <tbody id="tabla"></tbody>
+        <tbody id="tabla"></tbody>
         </table>
         <div class="btns">
           <button id="exportarTodo" class="btn">Exportar JSON</button>
@@ -208,30 +220,20 @@
       phone: '6037-4749'
     };
 
-    /*************** Logo por defecto (archivo en el repo) ***************/
     const DEFAULT_LOGO_URL = './logo.png';
 
     /*************** Persistencia ***************/
     const LS_KEY_REPORTES = 'reportes_simple_list';
-    const LS_KEY_CONSEC   = 'reportes_simple_consecutivo'; // arranca en 56 -> siguiente 57
+    const LS_KEY_CONSEC   = 'reportes_simple_consecutivo';
     const LS_KEY_LOGO     = 'reportes_simple_logo_fijo';
 
     function loadReportes(){ try{ return JSON.parse(localStorage.getItem(LS_KEY_REPORTES) || '[]'); }catch(e){ return []; } }
-    function saveReportes(arr){ try{ localStorage.setItem(LS_KEY_REPORTES, JSON.stringify(arr)); }catch(e){ alert('No se pudo guardar. Revisa espacio/privacidad.'); } }
-
-    function getNextConsecutivo(){
-      let n = parseInt(localStorage.getItem(LS_KEY_CONSEC) || '56', 10);
-      const next = n + 1;
-      try{ localStorage.setItem(LS_KEY_CONSEC, String(next)); }catch(e){}
-      return next;
-    }
-    function peekConsecutivo(){
-      let n = parseInt(localStorage.getItem(LS_KEY_CONSEC) || '56', 10);
-      return n + 1;
-    }
+    function saveReportes(arr){ try{ localStorage.setItem(LS_KEY_REPORTES, JSON.stringify(arr)); }catch(e){} }
+    function getNextConsecutivo(){ let n = parseInt(localStorage.getItem(LS_KEY_CONSEC) || '56', 10); const next = n + 1; try{ localStorage.setItem(LS_KEY_CONSEC, String(next)); }catch(e){} return next; }
+    function peekConsecutivo(){ let n = parseInt(localStorage.getItem(LS_KEY_CONSEC) || '56', 10); return n + 1; }
 
     function getLogoFijo(){ return localStorage.getItem(LS_KEY_LOGO); }
-    function setLogoFijo(dataURL){ try{ localStorage.setItem(LS_KEY_LOGO, dataURL); }catch(e){ alert('No se pudo guardar el logo.'); } }
+    function setLogoFijo(dataURL){ try{ localStorage.setItem(LS_KEY_LOGO, dataURL); }catch(e){} }
     async function tryLoadDefaultLogo(){
       if (getLogoFijo()) return;
       try {
@@ -270,7 +272,7 @@
       setLogoFijo(logoDataURL); toast('Logo fijo guardado');
     });
 
-    /*************** Fotos (hasta 10, acumulando; cámara o carrete) ***************/
+    /*************** Fotos ***************/
     const MAX_FOTOS = 10;
     const fotosInput = document.getElementById('fotos');
     const thumbs = document.getElementById('thumbs');
@@ -298,7 +300,6 @@
         fotosDataURLs.push(url);
       }
       refreshThumbs();
-      // permite volver a abrir el selector (añadir más)
       fotosInput.value = '';
     });
 
@@ -343,17 +344,8 @@
       };
     }
 
-    /*************** Guardar / Cargar / Borrar ***************/
-    async function guardarLocal(){
-      const obj = formDataToObj(true);                // asigna consecutivo y lo incrementa en LS
-      const arr = loadReportes(); arr.push(obj); saveReportes(arr);
-      renderTabla();
-      // muestra el siguiente número disponible
-      document.getElementById('numReporte').value = peekConsecutivo();
-      toast(`Guardado reporte #${obj.consecutivo}`);
-    }
-    document.getElementById('guardar').addEventListener('click', guardarLocal);
-
+    /*************** Guardar / Cargar / Borrar (sin botón guardar) ***************/
+    // Mantengo funciones de tabla por si en el futuro vuelves a guardar
     function loadToForm(r){
       document.getElementById('numReporte').value = r.consecutivo;
       document.getElementById('fecha').value = r.fecha;
@@ -407,14 +399,13 @@
       }));
     }
 
-    /*************** PDF (logo grande + datos cliente) con salida iOS-segura ***************/
+    /*************** PDF ***************/
     function generarPDF(sourceObj){
       const obj = sourceObj || formDataToObj(false);
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ unit:'pt', format:'a4' });
       const M = 36; let y = M;
 
-      // Cabecera
       if (obj.logo){ try { doc.addImage(obj.logo, 'PNG', M, y, 150, 75); } catch(e) {} }
       const rightX = M + 170;
       doc.setFont('helvetica','bold'); doc.setFontSize(12);
@@ -427,7 +418,6 @@
 
       y += 110; doc.setDrawColor(100,120,150); doc.setLineWidth(0.7); doc.line(M, y, 595-M, y);
 
-      // OT
       y += 18; doc.setFont('helvetica','bold'); doc.setFontSize(12);
       doc.text(`Num. Orden de trabajo: ${String(obj.consecutivo).padStart(5,'0')}`, M, y);
 
@@ -437,36 +427,29 @@
       doc.text(`Hora Fin: ${obj.horaFin}`,   M+340, y);
       doc.text(`Tiempo: ${obj.duracion}`,    595 - M, y, { align:'right' });
 
-      // Datos cliente
       y += 22; doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('DATOS DEL CLIENTE', M, y);
       doc.setFont('helvetica','normal'); doc.setFontSize(10);
       y += 16; doc.text(`Cliente: ${obj.cliente || '-'}`, M, y);
       y += 16; doc.text(`Responsable: ${obj.responsable || '-'}`, M, y);
       if (obj.correo){ y += 16; doc.text(`Correo: ${obj.correo}`, M, y); }
 
-      // Separador
       y += 12; doc.setDrawColor(100,120,150); doc.line(M, y, 595-M, y);
 
-      // Actuaciones / cantidad
       y += 18; doc.setFont('helvetica','bold'); doc.setFontSize(11);
       doc.text('ACTUACIONES', M, y); doc.text('CANTIDAD', 595-M, y, { align:'right' });
       y += 14; doc.setFont('helvetica','normal'); doc.setFontSize(10);
       doc.text(String(obj.actuacion || '-'), M, y);
       doc.text(String(obj.cantidad || '1'),  595-M, y, { align:'right' });
 
-      // Separador
       y += 16; doc.setDrawColor(100,120,150); doc.line(M, y, 595-M, y);
 
-      // Observaciones
       y += 18; doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('Observaciones:', M, y);
       y += 14; doc.setFont('helvetica','normal'); doc.setFontSize(10);
       const obsLines = doc.splitTextToSize(obj.acciones || '-', 595 - 2*M);
       obsLines.forEach(line => { if (y > doc.internal.pageSize.getHeight() - 80){ doc.addPage(); y = M; } doc.text(line, M, y); y += 12; });
 
-      // Separador
       if (y < doc.internal.pageSize.getHeight() - 80){ y += 6; doc.setDrawColor(100,120,150); doc.line(M, y, 595-M, y); }
 
-      // Fotos (≤10)
       if (obj.fotos && obj.fotos.length){
         doc.setFont('helvetica','bold'); doc.setFontSize(11);
         for (let i=0;i<obj.fotos.length && i<10;i++){
@@ -478,17 +461,14 @@
         }
       }
 
-      // Firma
       if (y > doc.internal.pageSize.getHeight() - 210){ doc.addPage(); y = M; }
       doc.setDrawColor(60,80,120); doc.rect(M, y, 360, 140);
       doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('Firma del cliente / conformidad', M+8, y+16);
       if (obj.firma){ try { doc.addImage(obj.firma, 'PNG', M+10, y+26, 340, 110); } catch(e) {} }
 
-      // Pie
       doc.setDrawColor(200,210,230); doc.line(M, 820, 595-M, 820);
       doc.setFontSize(8); doc.setTextColor(120,140,170); doc.text('Generado localmente — sin Service Worker.', M, 834);
 
-      // iOS—seguro
       const nombre = `OT_${String(obj.consecutivo).padStart(5,'0')}_${(obj.cliente||'Cliente').replace(/[^a-z0-9\-_]+/gi,'_')}.pdf`;
       const blobUrl = doc.output('bloburl');
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
@@ -519,7 +499,6 @@
     }
     window.addEventListener('load', bindPDFWhenReady);
 
-    // tras "Limpiar formulario", volvemos a mostrar el siguiente consecutivo
     document.getElementById('resetForm').addEventListener('click', ()=>{
       setTimeout(()=>{ document.getElementById('numReporte').value = peekConsecutivo(); }, 0);
     });
@@ -530,7 +509,7 @@
     }
     async function init(){
       resizeCanvas(); initFechaHora();
-      document.getElementById('numReporte').value = peekConsecutivo(); // muestra siguiente al iniciar
+      document.getElementById('numReporte').value = peekConsecutivo();
       await tryLoadDefaultLogo();
       renderTabla(); refreshThumbs(); updatePhotoCount();
     }
