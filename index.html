@@ -361,7 +361,7 @@
       }));
     }
 
-    /*************** PDF (logo grande + datos cliente en bloque) ***************/
+    /*************** PDF (logo grande + datos cliente en bloque) con salida iOS-segura ***************/
     function generarPDF(sourceObj){
       const obj = sourceObj || formDataToObj(false);
       const { jsPDF } = window.jspdf;
@@ -445,8 +445,22 @@
       doc.setDrawColor(200,210,230); doc.line(M, 820, 595-M, 820);
       doc.setFontSize(8); doc.setTextColor(120,140,170); doc.text('Generado localmente — sin Service Worker.', M, 834);
 
+      // ===== Salida iOS-segura =====
       const nombre = `OT_${String(obj.consecutivo).padStart(5,'0')}_${(obj.cliente||'Cliente').replace(/[^a-z0-9\-_]+/gi,'_')}.pdf`;
-      doc.save(nombre);
+      const blobUrl = doc.output('bloburl');
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      if (isIOS) {
+        // iOS: abrir en pestaña nueva para usar el botón Compartir/Guardar
+        window.open(blobUrl, '_blank');
+      } else {
+        // Otros: intentar descarga directa
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = nombre;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
     }
 
     /*************** Exportar/Importar JSON ***************/
