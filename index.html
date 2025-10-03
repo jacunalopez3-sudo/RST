@@ -122,7 +122,7 @@
             </div>
           </div>
 
-          <!-- (Eliminado) Descripción de falla / solicitud -->
+          <!-- Eliminado: Descripción de falla / solicitud -->
 
           <label>Observaciones / diagnóstico</label>
           <textarea id="acciones" required></textarea>
@@ -191,7 +191,7 @@
         </div>
       </section>
     </div>
-    <p class="footer">PDF: logo grande, cabecera empresa, DATOS DEL CLIENTE, EQUIPO ATENDIDO (incluye EQUIPO), ACTUACIONES/CANTIDAD, Observaciones, fotos y firma.</p>
+    <p class="footer">PDF: marco sobrio, logo grande, cabecera empresa, DATOS DEL CLIENTE, EQUIPO ATENDIDO (incluye EQUIPO), ACTUACIONES/CANTIDAD, Observaciones, IMÁGENES (Foto 1 inmediatamente), resto de fotos y firma.</p>
   </main>
 
   <!-- jsPDF -->
@@ -354,7 +354,6 @@
         equipo:get('equipo'),
         marca:get('marca'), modelo:get('modelo'), serie:get('serie'),
         actuacion:get('actuacion'), cantidad:get('cantidad'),
-        /* eliminado: falla */
         acciones:get('acciones'),
         repuestos:get('repuestos'), horas:get('horas'), estado:get('estado'),
         fotos:[...fotosDataURLs], logo:(logoDataURL || getLogoFijo()), firma
@@ -449,14 +448,34 @@
       }));
     }
 
-    /* ===== PDF (sin FALLA; incluye EQUIPO en EQUIPO ATENDIDO) ===== */
+    /* ===== PDF (IMÁGENES tras Observaciones + marco sobrio) ===== */
     function generarPDF(sourceObj){
       const obj = sourceObj || formDataToObj(true); // asigna consecutivo definitivo aquí
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ unit:'pt', format:'a4' });
-      const M = 36; let y = M;
+      const M = 36;              // margen de contenido
+      const FRAME = 18;          // margen del marco sobrio
+      let y = M;
 
-      // Cabecera
+      // --- helper: dibuja marco sobrio en la página actual ---
+      function drawFrame(){
+        doc.setDrawColor(170,185,205); // gris azulado sobrio
+        doc.setLineWidth(0.8);
+        const w = doc.internal.pageSize.getWidth();
+        const h = doc.internal.pageSize.getHeight();
+        doc.rect(FRAME, FRAME, w - 2*FRAME, h - 2*FRAME); // marco
+      }
+      // Monkey-patch: cada vez que se agregue una página, dibujar el marco
+      const _addPage = doc.addPage.bind(doc);
+      doc.addPage = function(...args){
+        const ret = _addPage(...args);
+        drawFrame();
+        return ret;
+      };
+      // marco en la 1ª página
+      drawFrame();
+
+      // ---- Cabecera ----
       if (obj.logo){ try { doc.addImage(obj.logo, 'PNG', M, y, 150, 75); } catch(e) {} }
       const rightX = M + 170;
       doc.setFont('helvetica','bold'); doc.setFontSize(12);
@@ -503,8 +522,6 @@
       doc.text(String(obj.actuacion || '-'), M, y);
       doc.text(String(obj.cantidad || '1'),  595-M, y, { align:'right' });
 
-      // (Eliminado) Bloque de Falla
-
       // Observaciones
       y += 16; doc.setDrawColor(100,120,150); doc.line(M, y, 595-M, y);
       y += 18; doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('Observaciones:', M, y);
@@ -515,21 +532,38 @@
         doc.text(line, M, y); y += 12;
       }
 
-      // Fotos
-      if (y < doc.internal.pageSize.getHeight() - 80){ y += 6; doc.setDrawColor(100,120,150); doc.line(M, y, 595-M, y); }
+      // IMÁGENES + Foto 1 al tiro
+      const pageH = doc.internal.pageSize.getHeight();
+      if (y < pageH - 80){ y += 6; doc.setDrawColor(100,120,150); doc.line(M, y, 595-M, y); }
+      y += 18;
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text('IMÁGENES', M, y);
+
       if (obj.fotos && obj.fotos.length){
-        doc.setFont('helvetica','bold'); doc.setFontSize(11);
-        for (let i=0;i<obj.fotos.length && i<10;i++){
+        const hImg = 320;
+        const need = 6 + hImg + 10;
+        if (y + need > pageH - 60){ doc.addPage(); y = M; }
+        y += 6;
+        try { doc.addImage(obj.fotos[0], 'JPEG', M, y, 595-2*M, hImg); } catch(e) {}
+        y += hImg + 10;
+      }
+
+      // Resto de fotos (2..10)
+      if (obj.fotos && obj.fotos.length > 1){
+        doc.setFont('helvetica','normal'); doc.setFontSize(10);
+        for (let i=1;i<obj.fotos.length && i<10;i++){
           const need = 16 + 320 + 10;
-          if (y + need > doc.internal.pageSize.getHeight() - 60){ doc.addPage(); y = M; }
-          y += 16; doc.text(`FOTO ${i+1}:`, M, y);
-          y += 6; try { doc.addImage(obj.fotos[i], 'JPEG', M, y, 595-2*M, 320); } catch(e) {}
-          y += 330;
+          if (y + need > pageH - 60){ doc.addPage(); y = M; }
+          doc.setFont('helvetica','bold'); doc.text(`FOTO ${i+1}:`, M, y);
+          doc.setFont('helvetica','normal');
+          y += 6;
+          try { doc.addImage(obj.fotos[i], 'JPEG', M, y, 595-2*M, 320); } catch(e) {}
+          y += 320 + 10;
         }
       }
 
       // Firma
-      if (y > doc.internal.pageSize.getHeight() - 210){ doc.addPage(); y = M; }
+      if (y > pageH - 210){ doc.addPage(); y = M; }
       doc.setDrawColor(60,80,120); doc.rect(M, y, 360, 140);
       doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('Firma del cliente / conformidad', M+8, y+16);
       if (obj.firma){ try { doc.addImage(obj.firma, 'PNG', M+10, y+26, 340, 110); } catch(e) {} }
