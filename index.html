@@ -193,7 +193,7 @@
         </div>
       </section>
     </div>
-    <p class="footer">PDF: logo grande, cabecera empresa, DATOS DEL CLIENTE, EQUIPO ATENDIDO, ACTUACIONES/CANTIDAD, Observaciones, fotos y firma.</p>
+    <p class="footer">PDF: logo grande, cabecera empresa, DATOS DEL CLIENTE, EQUIPO ATENDIDO, ACTUACIONES/CANTIDAD, **Descripción de falla**, Observaciones, fotos y firma.</p>
   </main>
 
   <!-- jsPDF -->
@@ -448,7 +448,7 @@
       }));
     }
 
-    /* ===== PDF (incluye EQUIPO ATENDIDO) ===== */
+    /* ===== PDF (incluye EQUIPO ATENDIDO y FALLA antes de OBSERVACIONES) ===== */
     function generarPDF(sourceObj){
       const obj = sourceObj || formDataToObj(true); // asigna consecutivo definitivo aquí
       const { jsPDF } = window.jspdf;
@@ -485,7 +485,7 @@
       y += 16; doc.text(`Responsable: ${obj.responsable || '-'}`, M, y);
       if (obj.telefono){ y += 16; doc.text(`Teléfono: ${obj.telefono}`, M, y); }
 
-      // EQUIPO ATENDIDO (nuevo bloque)
+      // EQUIPO ATENDIDO
       y += 12; doc.setDrawColor(100,120,150); doc.line(M, y, 595-M, y);
       y += 18; doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('EQUIPO ATENDIDO', M, y);
       doc.setFont('helvetica','normal'); doc.setFontSize(10);
@@ -501,8 +501,18 @@
       doc.text(String(obj.actuacion || '-'), M, y);
       doc.text(String(obj.cantidad || '1'),  595-M, y, { align:'right' });
 
-      // Observaciones
+      /* ===== NUEVO: Descripción de falla / solicitud ===== */
       y += 16; doc.setDrawColor(100,120,150); doc.line(M, y, 595-M, y);
+      y += 18; doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('Descripción de falla / solicitud:', M, y);
+      y += 14; doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      const fallaLines = doc.splitTextToSize(obj.falla || '-', 595 - 2*M);
+      for (const line of fallaLines){
+        if (y > doc.internal.pageSize.getHeight() - 80){ doc.addPage(); y = M; }
+        doc.text(line, M, y); y += 12;
+      }
+
+      // Observaciones (después de Falla)
+      if (y < doc.internal.pageSize.getHeight() - 80){ y += 6; doc.setDrawColor(100,120,150); doc.line(M, y, 595-M, y); }
       y += 18; doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('Observaciones:', M, y);
       y += 14; doc.setFont('helvetica','normal'); doc.setFontSize(10);
       const obsLines = doc.splitTextToSize(obj.acciones || '-', 595 - 2*M);
