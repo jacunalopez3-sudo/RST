@@ -92,7 +92,10 @@
             </div>
             <div>
               <label>Responsable en sitio</label>
-              <input type="text" id="responsable" required />
+              <select id="responsable" required>
+                <option value="Ing. Juan Carlos Acuña">Ing. Juan Carlos Acuña</option>
+                <option value="Ing. Leonardo Chacón">Ing. Leonardo Chacón</option>
+              </select>
             </div>
             <div>
               <label>Teléfono cliente (opcional)</label>
@@ -102,7 +105,7 @@
 
           <h3 class="muted">Equipo atendido</h3>
           <div class="grid-3">
-            <div><label>Equipo</label><input type="text" id="equipo" placeholder="Ej. Monitor Multiparámetro" /></div>
+            <div><label>EQUIPO</label><input type="text" id="equipo" placeholder="Ej. Monitor Multiparámetro" /></div>
             <div><label>Marca</label><input type="text" id="marca" required /></div>
             <div><label>Modelo</label><input type="text" id="modelo" required /></div>
           </div>
@@ -215,7 +218,7 @@
     const HEADER = {
       company: 'Bennu Healthcare Solutions',
       legalId: '3-101804878',
-      address: 'San José,Uruca,Costa Rica',
+      address: 'Uruca, San José, Costa Rica',
       email: 'serviciotecncio@bennucr.com',
       phone: '6037-4749'
     };
