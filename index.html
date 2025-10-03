@@ -8,7 +8,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-
   <style>
     :root { --bg:#0b1020; --card:#121a34; --muted:#8aa0c6; --text:#ebf0ff; --border:#253055; --shadow:0 10px 30px rgba(0,0,0,.35); --radius:18px; }
     *{box-sizing:border-box} html,body{height:100%}
@@ -134,10 +133,11 @@
             </div>
           </div>
 
-          <label>Fotografías (hasta 10) — usa la cámara del móvil</label>
-          <input type="file" id="fotos" accept="image/*" capture="environment" multiple />
+          <label>Fotografías (hasta 10) — cámara o carrete</label>
+          <!-- Sin capture: permite cámara y galería/carrete -->
+          <input type="file" id="fotos" accept="image/*" multiple />
           <div class="btns">
-            <button type="button" id="addMore" class="btn">Añadir más fotos</button>
+            <button type="button" id="addMore" class="btn">Añadir fotos</button>
             <button type="button" id="clearPhotos" class="btn danger">Limpiar fotos</button>
             <span id="photoCount" class="muted"></span>
           </div>
@@ -159,7 +159,7 @@
           <div class="btns">
             <button type="button" class="primary" id="guardar">Guardar local</button>
             <button type="button" class="success" id="pdf">Generar PDF</button>
-            <button type="reset" class="danger">Limpiar formulario</button>
+            <button type="reset" id="resetForm" class="danger">Limpiar formulario</button>
           </div>
           <div class="footer">Consecutivo y datos en <strong>localStorage</strong>. Sin Service Worker.</div>
         </form>
@@ -217,13 +217,21 @@
     const LS_KEY_LOGO     = 'reportes_simple_logo_fijo';
 
     function loadReportes(){ try{ return JSON.parse(localStorage.getItem(LS_KEY_REPORTES) || '[]'); }catch(e){ return []; } }
-    function saveReportes(arr){ localStorage.setItem(LS_KEY_REPORTES, JSON.stringify(arr)); }
+    function saveReportes(arr){ try{ localStorage.setItem(LS_KEY_REPORTES, JSON.stringify(arr)); }catch(e){ alert('No se pudo guardar. Revisa espacio/privacidad.'); } }
 
-    function getNextConsecutivo(){ let n = parseInt(localStorage.getItem(LS_KEY_CONSEC) || '56', 10); const next = n + 1; localStorage.setItem(LS_KEY_CONSEC, String(next)); return next; }
-    function peekConsecutivo(){ let n = parseInt(localStorage.getItem(LS_KEY_CONSEC) || '56', 10); return n + 1; }
+    function getNextConsecutivo(){
+      let n = parseInt(localStorage.getItem(LS_KEY_CONSEC) || '56', 10);
+      const next = n + 1;
+      try{ localStorage.setItem(LS_KEY_CONSEC, String(next)); }catch(e){}
+      return next;
+    }
+    function peekConsecutivo(){
+      let n = parseInt(localStorage.getItem(LS_KEY_CONSEC) || '56', 10);
+      return n + 1;
+    }
 
     function getLogoFijo(){ return localStorage.getItem(LS_KEY_LOGO); }
-    function setLogoFijo(dataURL){ localStorage.setItem(LS_KEY_LOGO, dataURL); }
+    function setLogoFijo(dataURL){ try{ localStorage.setItem(LS_KEY_LOGO, dataURL); }catch(e){ alert('No se pudo guardar el logo.'); } }
     async function tryLoadDefaultLogo(){
       if (getLogoFijo()) return;
       try {
@@ -262,31 +270,24 @@
       setLogoFijo(logoDataURL); toast('Logo fijo guardado');
     });
 
-    /*************** Fotos (hasta 10, acumulando) ***************/
+    /*************** Fotos (hasta 10, acumulando; cámara o carrete) ***************/
     const MAX_FOTOS = 10;
     const fotosInput = document.getElementById('fotos');
     const thumbs = document.getElementById('thumbs');
     const photoCount = document.getElementById('photoCount');
     let fotosDataURLs = [];
 
-    function updatePhotoCount(){
-      photoCount.textContent = `(${fotosDataURLs.length}/${MAX_FOTOS})`;
-    }
+    function updatePhotoCount(){ photoCount.textContent = `(${fotosDataURLs.length}/${MAX_FOTOS})`; }
     function addThumb(url, idx){
       const div = document.createElement('div'); div.className='item';
       const img = document.createElement('img'); img.src = url;
       const tag = document.createElement('span'); tag.className='tag'; tag.textContent = `FOTO ${idx}`;
       const x = document.createElement('button'); x.className='del'; x.textContent='×';
-      x.addEventListener('click', ()=> {
-        const i = fotosDataURLs.indexOf(url);
-        if (i>=0){ fotosDataURLs.splice(i,1); refreshThumbs(); }
-      });
+      x.addEventListener('click', ()=> { const i=fotosDataURLs.indexOf(url); if(i>=0){fotosDataURLs.splice(i,1); refreshThumbs(); }});
       div.appendChild(img); div.appendChild(tag); div.appendChild(x);
       thumbs.appendChild(div);
     }
-    function refreshThumbs(){
-      thumbs.innerHTML=''; fotosDataURLs.forEach((u,i)=> addThumb(u, i+1)); updatePhotoCount();
-    }
+    function refreshThumbs(){ thumbs.innerHTML=''; fotosDataURLs.forEach((u,i)=> addThumb(u, i+1)); updatePhotoCount(); }
 
     fotosInput.addEventListener('change', async (ev) => {
       const files = Array.from(ev.target.files || []);
@@ -297,14 +298,12 @@
         fotosDataURLs.push(url);
       }
       refreshThumbs();
-      // Permite volver a abrir la cámara para añadir otra (iOS/Android)
+      // permite volver a abrir el selector (añadir más)
       fotosInput.value = '';
     });
 
     document.getElementById('addMore').addEventListener('click', ()=> fotosInput.click());
-    document.getElementById('clearPhotos').addEventListener('click', ()=>{
-      fotosDataURLs = []; refreshThumbs();
-    });
+    document.getElementById('clearPhotos').addEventListener('click', ()=>{ fotosDataURLs = []; refreshThumbs(); });
 
     function fileToDataURL(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
 
@@ -346,9 +345,11 @@
 
     /*************** Guardar / Cargar / Borrar ***************/
     async function guardarLocal(){
-      const obj = formDataToObj(true);
+      const obj = formDataToObj(true);                // asigna consecutivo y lo incrementa en LS
       const arr = loadReportes(); arr.push(obj); saveReportes(arr);
-      renderTabla(); document.getElementById('numReporte').value = peekConsecutivo();
+      renderTabla();
+      // muestra el siguiente número disponible
+      document.getElementById('numReporte').value = peekConsecutivo();
       toast(`Guardado reporte #${obj.consecutivo}`);
     }
     document.getElementById('guardar').addEventListener('click', guardarLocal);
@@ -406,14 +407,14 @@
       }));
     }
 
-    /*************** PDF (logo grande + datos cliente en bloque) con salida iOS-segura ***************/
+    /*************** PDF (logo grande + datos cliente) con salida iOS-segura ***************/
     function generarPDF(sourceObj){
       const obj = sourceObj || formDataToObj(false);
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ unit:'pt', format:'a4' });
       const M = 36; let y = M;
 
-      // Cabecera: logo grande + empresa a la derecha
+      // Cabecera
       if (obj.logo){ try { doc.addImage(obj.logo, 'PNG', M, y, 150, 75); } catch(e) {} }
       const rightX = M + 170;
       doc.setFont('helvetica','bold'); doc.setFontSize(12);
@@ -427,18 +428,16 @@
       y += 110; doc.setDrawColor(100,120,150); doc.setLineWidth(0.7); doc.line(M, y, 595-M, y);
 
       // OT
-      y += 18;
-      doc.setFont('helvetica','bold'); doc.setFontSize(12);
+      y += 18; doc.setFont('helvetica','bold'); doc.setFontSize(12);
       doc.text(`Num. Orden de trabajo: ${String(obj.consecutivo).padStart(5,'0')}`, M, y);
 
-      y += 18;
-      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      y += 18; doc.setFont('helvetica','normal'); doc.setFontSize(10);
       doc.text(`Fecha: ${obj.fecha}`, M, y);
       doc.text(`Hora Inicio: ${obj.horaIni}`, M+180, y);
       doc.text(`Hora Fin: ${obj.horaFin}`,   M+340, y);
       doc.text(`Tiempo: ${obj.duracion}`,    595 - M, y, { align:'right' });
 
-      // DATOS DEL CLIENTE
+      // Datos cliente
       y += 22; doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('DATOS DEL CLIENTE', M, y);
       doc.setFont('helvetica','normal'); doc.setFontSize(10);
       y += 16; doc.text(`Cliente: ${obj.cliente || '-'}`, M, y);
@@ -448,7 +447,7 @@
       // Separador
       y += 12; doc.setDrawColor(100,120,150); doc.line(M, y, 595-M, y);
 
-      // ACTUACIONES / CANTIDAD
+      // Actuaciones / cantidad
       y += 18; doc.setFont('helvetica','bold'); doc.setFontSize(11);
       doc.text('ACTUACIONES', M, y); doc.text('CANTIDAD', 595-M, y, { align:'right' });
       y += 14; doc.setFont('helvetica','normal'); doc.setFontSize(10);
@@ -458,7 +457,7 @@
       // Separador
       y += 16; doc.setDrawColor(100,120,150); doc.line(M, y, 595-M, y);
 
-      // OBSERVACIONES
+      // Observaciones
       y += 18; doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('Observaciones:', M, y);
       y += 14; doc.setFont('helvetica','normal'); doc.setFontSize(10);
       const obsLines = doc.splitTextToSize(obj.acciones || '-', 595 - 2*M);
@@ -467,10 +466,10 @@
       // Separador
       if (y < doc.internal.pageSize.getHeight() - 80){ y += 6; doc.setDrawColor(100,120,150); doc.line(M, y, 595-M, y); }
 
-      // FOTOS (hasta 10; cada una ~320pt alto, ancho página)
+      // Fotos (≤10)
       if (obj.fotos && obj.fotos.length){
         doc.setFont('helvetica','bold'); doc.setFontSize(11);
-        for (let i=0;i<obj.fotos.length && i<MAX_FOTOS;i++){
+        for (let i=0;i<obj.fotos.length && i<10;i++){
           const need = 16 + 320 + 10;
           if (y + need > doc.internal.pageSize.getHeight() - 60){ doc.addPage(); y = M; }
           y += 16; doc.text(`FOTO ${i+1}:`, M, y);
@@ -479,17 +478,17 @@
         }
       }
 
-      // FIRMA (360x140)
+      // Firma
       if (y > doc.internal.pageSize.getHeight() - 210){ doc.addPage(); y = M; }
       doc.setDrawColor(60,80,120); doc.rect(M, y, 360, 140);
       doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('Firma del cliente / conformidad', M+8, y+16);
       if (obj.firma){ try { doc.addImage(obj.firma, 'PNG', M+10, y+26, 340, 110); } catch(e) {} }
 
-      // PIE
+      // Pie
       doc.setDrawColor(200,210,230); doc.line(M, 820, 595-M, 820);
       doc.setFontSize(8); doc.setTextColor(120,140,170); doc.text('Generado localmente — sin Service Worker.', M, 834);
 
-      // Salida iOS-segura
+      // iOS—seguro
       const nombre = `OT_${String(obj.consecutivo).padStart(5,'0')}_${(obj.cliente||'Cliente').replace(/[^a-z0-9\-_]+/gi,'_')}.pdf`;
       const blobUrl = doc.output('bloburl');
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
@@ -511,7 +510,7 @@
       }catch{ alert('Archivo inválido'); }
     });
 
-    /*************** Binding PDF cuando jsPDF esté listo ***************/
+    /*************** Enlaces, reset y arranque ***************/
     function bindPDFWhenReady(){
       if (window.jspdf && window.jspdf.jsPDF) {
         const btn = document.getElementById('pdf');
@@ -520,13 +519,18 @@
     }
     window.addEventListener('load', bindPDFWhenReady);
 
-    /*************** UI init ***************/
+    // tras "Limpiar formulario", volvemos a mostrar el siguiente consecutivo
+    document.getElementById('resetForm').addEventListener('click', ()=>{
+      setTimeout(()=>{ document.getElementById('numReporte').value = peekConsecutivo(); }, 0);
+    });
+
     function toast(msg){ const d=document.createElement('div'); d.textContent=msg;
       d.style.cssText='position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#101a35;border:1px solid #253055;padding:10px 14px;border-radius:12px;box-shadow:var(--shadow);z-index:9999;color:#ebf0ff;';
       document.body.appendChild(d); setTimeout(()=>d.remove(),2200);
     }
     async function init(){
-      resizeCanvas(); initFechaHora(); document.getElementById('numReporte').value = peekConsecutivo();
+      resizeCanvas(); initFechaHora();
+      document.getElementById('numReporte').value = peekConsecutivo(); // muestra siguiente al iniciar
       await tryLoadDefaultLogo();
       renderTabla(); refreshThumbs(); updatePhotoCount();
     }
