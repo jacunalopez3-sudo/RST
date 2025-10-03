@@ -33,7 +33,10 @@
     button.success{background:#18a877;border-color:#159569}
     button.danger{background:#e74a3b;border-color:#c0392b}
     .thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;margin-top:8px}
+    .thumbs .item{position:relative}
     .thumbs img{width:100%;height:74px;object-fit:cover;border-radius:10px;border:1px solid var(--border)}
+    .thumbs .tag{position:absolute;left:6px;top:6px;background:#0009;padding:2px 6px;border-radius:8px;font-size:.75rem}
+    .thumbs .del{position:absolute;right:6px;top:6px;background:#c0392b;border:none;border-radius:50%;width:22px;height:22px;color:#fff;cursor:pointer}
     canvas#sigPad{width:100%;height:170px;background:#0f1732;border:1px dashed #2c3b6a;border-radius:12px}
     table{width:100%;border-collapse:collapse}
     th,td{padding:10px;border-bottom:1px solid var(--border);text-align:left}
@@ -131,8 +134,13 @@
             </div>
           </div>
 
-          <label>Fotografías (evidencia) — usa la cámara del móvil</label>
+          <label>Fotografías (hasta 10) — usa la cámara del móvil</label>
           <input type="file" id="fotos" accept="image/*" capture="environment" multiple />
+          <div class="btns">
+            <button type="button" id="addMore" class="btn">Añadir más fotos</button>
+            <button type="button" id="clearPhotos" class="btn danger">Limpiar fotos</button>
+            <span id="photoCount" class="muted"></span>
+          </div>
           <div id="thumbs" class="thumbs"></div>
 
           <div class="grid-2">
@@ -191,17 +199,19 @@
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@5.0.10/dist/signature_pad.umd.min.js"></script>
 
   <script>
-    /*************** Datos de empresa (cabecera PDF) — edítalos a gusto ***************/
+    /*************** Datos de empresa (cabecera PDF) ***************/
     const HEADER = {
-      company:   'Bennu Healthcare Solutions',
-      legalId:   '3-101804878',
-      address:   'Sabana Sur, Mata Redonda, Centro Comercial del Sur',
-      email:     'jacuna@bennucr.com',
-      phone:     'Teléfono: 83485676',
-      technician:'Técnico: Ing. Juan Carlos Acuña Lopez'
+      company: 'Bennu Healthcare Solutions',
+      legalId: '3-101804878',
+      address: 'Sabana Sur, Mata Redonda, Centro Comercial del Sur',
+      email: 'serviciotecncio@bennucr.com',
+      phone: '6037-4749'
     };
 
-    /*************** Persistencia: reportes + consecutivo + logo fijo ***************/
+    /*************** Logo por defecto (archivo en el repo) ***************/
+    const DEFAULT_LOGO_URL = './logo.png';
+
+    /*************** Persistencia ***************/
     const LS_KEY_REPORTES = 'reportes_simple_list';
     const LS_KEY_CONSEC   = 'reportes_simple_consecutivo'; // arranca en 56 -> siguiente 57
     const LS_KEY_LOGO     = 'reportes_simple_logo_fijo';
@@ -209,18 +219,22 @@
     function loadReportes(){ try{ return JSON.parse(localStorage.getItem(LS_KEY_REPORTES) || '[]'); }catch(e){ return []; } }
     function saveReportes(arr){ localStorage.setItem(LS_KEY_REPORTES, JSON.stringify(arr)); }
 
-    function getNextConsecutivo(){
-      let n = parseInt(localStorage.getItem(LS_KEY_CONSEC) || '56', 10);
-      const next = n + 1; localStorage.setItem(LS_KEY_CONSEC, String(next));
-      return next;
-    }
-    function peekConsecutivo(){
-      let n = parseInt(localStorage.getItem(LS_KEY_CONSEC) || '56', 10);
-      return n + 1;
-    }
+    function getNextConsecutivo(){ let n = parseInt(localStorage.getItem(LS_KEY_CONSEC) || '56', 10); const next = n + 1; localStorage.setItem(LS_KEY_CONSEC, String(next)); return next; }
+    function peekConsecutivo(){ let n = parseInt(localStorage.getItem(LS_KEY_CONSEC) || '56', 10); return n + 1; }
 
     function getLogoFijo(){ return localStorage.getItem(LS_KEY_LOGO); }
     function setLogoFijo(dataURL){ localStorage.setItem(LS_KEY_LOGO, dataURL); }
+    async function tryLoadDefaultLogo(){
+      if (getLogoFijo()) return;
+      try {
+        const res = await fetch(DEFAULT_LOGO_URL, { cache:'no-store' });
+        if (!res.ok) return;
+        const blob = await res.blob();
+        const reader = new FileReader();
+        reader.onload = () => setLogoFijo(reader.result);
+        reader.readAsDataURL(blob);
+      } catch(_) {}
+    }
 
     /*************** Firma ***************/
     const canvas = document.getElementById('sigPad');
@@ -248,19 +262,50 @@
       setLogoFijo(logoDataURL); toast('Logo fijo guardado');
     });
 
-    /*************** Fotos ***************/
+    /*************** Fotos (hasta 10, acumulando) ***************/
+    const MAX_FOTOS = 10;
     const fotosInput = document.getElementById('fotos');
     const thumbs = document.getElementById('thumbs');
+    const photoCount = document.getElementById('photoCount');
     let fotosDataURLs = [];
+
+    function updatePhotoCount(){
+      photoCount.textContent = `(${fotosDataURLs.length}/${MAX_FOTOS})`;
+    }
+    function addThumb(url, idx){
+      const div = document.createElement('div'); div.className='item';
+      const img = document.createElement('img'); img.src = url;
+      const tag = document.createElement('span'); tag.className='tag'; tag.textContent = `FOTO ${idx}`;
+      const x = document.createElement('button'); x.className='del'; x.textContent='×';
+      x.addEventListener('click', ()=> {
+        const i = fotosDataURLs.indexOf(url);
+        if (i>=0){ fotosDataURLs.splice(i,1); refreshThumbs(); }
+      });
+      div.appendChild(img); div.appendChild(tag); div.appendChild(x);
+      thumbs.appendChild(div);
+    }
+    function refreshThumbs(){
+      thumbs.innerHTML=''; fotosDataURLs.forEach((u,i)=> addThumb(u, i+1)); updatePhotoCount();
+    }
+
     fotosInput.addEventListener('change', async (ev) => {
-      thumbs.innerHTML = ''; fotosDataURLs = [];
       const files = Array.from(ev.target.files || []);
-      for (const f of files) {
+      if (!files.length) return;
+      for (const f of files){
+        if (fotosDataURLs.length >= MAX_FOTOS) { toast('Límite de 10 fotos alcanzado'); break; }
         const url = await fileToDataURL(f);
         fotosDataURLs.push(url);
-        const img = document.createElement('img'); img.src = url; thumbs.appendChild(img);
       }
+      refreshThumbs();
+      // Permite volver a abrir la cámara para añadir otra (iOS/Android)
+      fotosInput.value = '';
     });
+
+    document.getElementById('addMore').addEventListener('click', ()=> fotosInput.click());
+    document.getElementById('clearPhotos').addEventListener('click', ()=>{
+      fotosDataURLs = []; refreshThumbs();
+    });
+
     function fileToDataURL(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
 
     /*************** Utilidades ***************/
@@ -327,8 +372,7 @@
       document.getElementById('horas').value = r.horas || '';
       document.getElementById('estado').value = r.estado || 'Operativo';
 
-      fotosDataURLs = r.fotos || []; thumbs.innerHTML = '';
-      for (const url of fotosDataURLs){ const img = document.createElement('img'); img.src = url; thumbs.appendChild(img); }
+      fotosDataURLs = r.fotos || []; refreshThumbs();
       if (r.logo) logoDataURL = r.logo;
 
       signaturePad.clear();
@@ -375,11 +419,10 @@
       doc.setFont('helvetica','bold'); doc.setFontSize(12);
       doc.text(HEADER.company, rightX, y+14);
       doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      doc.text(HEADER.legalId,   rightX, y+30);
-      doc.text(HEADER.address,   rightX, y+46);
-      doc.text(HEADER.email,     rightX, y+62);
-      doc.text(HEADER.phone,     rightX, y+78);
-      doc.text(HEADER.technician,rightX, y+94);
+      doc.text(HEADER.legalId, rightX, y+30);
+      doc.text(HEADER.address, rightX, y+46);
+      doc.text(HEADER.email, rightX, y+62);
+      doc.text(HEADER.phone, rightX, y+78);
 
       y += 110; doc.setDrawColor(100,120,150); doc.setLineWidth(0.7); doc.line(M, y, 595-M, y);
 
@@ -395,7 +438,7 @@
       doc.text(`Hora Fin: ${obj.horaFin}`,   M+340, y);
       doc.text(`Tiempo: ${obj.duracion}`,    595 - M, y, { align:'right' });
 
-      // DATOS DEL CLIENTE (bloque ancho)
+      // DATOS DEL CLIENTE
       y += 22; doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('DATOS DEL CLIENTE', M, y);
       doc.setFont('helvetica','normal'); doc.setFontSize(10);
       y += 16; doc.text(`Cliente: ${obj.cliente || '-'}`, M, y);
@@ -424,10 +467,10 @@
       // Separador
       if (y < doc.internal.pageSize.getHeight() - 80){ y += 6; doc.setDrawColor(100,120,150); doc.line(M, y, 595-M, y); }
 
-      // FOTOS
+      // FOTOS (hasta 10; cada una ~320pt alto, ancho página)
       if (obj.fotos && obj.fotos.length){
         doc.setFont('helvetica','bold'); doc.setFontSize(11);
-        for (let i=0;i<obj.fotos.length;i++){
+        for (let i=0;i<obj.fotos.length && i<MAX_FOTOS;i++){
           const need = 16 + 320 + 10;
           if (y + need > doc.internal.pageSize.getHeight() - 60){ doc.addPage(); y = M; }
           y += 16; doc.text(`FOTO ${i+1}:`, M, y);
@@ -436,32 +479,22 @@
         }
       }
 
-      // FIRMA
-      if (y > doc.internal.pageSize.getHeight() - 180){ doc.addPage(); y = M; }
-      doc.setDrawColor(60,80,120); doc.rect(M, y, 320, 110);
+      // FIRMA (360x140)
+      if (y > doc.internal.pageSize.getHeight() - 210){ doc.addPage(); y = M; }
+      doc.setDrawColor(60,80,120); doc.rect(M, y, 360, 140);
       doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('Firma del cliente / conformidad', M+8, y+16);
-      if (obj.firma){ try { doc.addImage(obj.firma, 'PNG', M+8, y+24, 300, 80); } catch(e) {} }
+      if (obj.firma){ try { doc.addImage(obj.firma, 'PNG', M+10, y+26, 340, 110); } catch(e) {} }
 
       // PIE
       doc.setDrawColor(200,210,230); doc.line(M, 820, 595-M, 820);
       doc.setFontSize(8); doc.setTextColor(120,140,170); doc.text('Generado localmente — sin Service Worker.', M, 834);
 
-      // ===== Salida iOS-segura =====
+      // Salida iOS-segura
       const nombre = `OT_${String(obj.consecutivo).padStart(5,'0')}_${(obj.cliente||'Cliente').replace(/[^a-z0-9\-_]+/gi,'_')}.pdf`;
       const blobUrl = doc.output('bloburl');
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      if (isIOS) {
-        // iOS: abrir en pestaña nueva para usar el botón Compartir/Guardar
-        window.open(blobUrl, '_blank');
-      } else {
-        // Otros: intentar descarga directa
-        const a = document.createElement('a');
-        a.href = blobUrl;
-        a.download = nombre;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      }
+      if (isIOS) { window.open(blobUrl, '_blank'); }
+      else { const a=document.createElement('a'); a.href=blobUrl; a.download=nombre; document.body.appendChild(a); a.click(); a.remove(); }
     }
 
     /*************** Exportar/Importar JSON ***************/
@@ -492,7 +525,11 @@
       d.style.cssText='position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#101a35;border:1px solid #253055;padding:10px 14px;border-radius:12px;box-shadow:var(--shadow);z-index:9999;color:#ebf0ff;';
       document.body.appendChild(d); setTimeout(()=>d.remove(),2200);
     }
-    function init(){ resizeCanvas(); initFechaHora(); document.getElementById('numReporte').value = peekConsecutivo(); renderTabla(); }
+    async function init(){
+      resizeCanvas(); initFechaHora(); document.getElementById('numReporte').value = peekConsecutivo();
+      await tryLoadDefaultLogo();
+      renderTabla(); refreshThumbs(); updatePhotoCount();
+    }
     init();
   </script>
 </body>
