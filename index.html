@@ -27,7 +27,7 @@
     .grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px}
     .muted{color:var(--muted);font-size:.9rem}
     .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
-    button,.btn{appearance:none;border:1px solid var(--border);background:#101a35;color:var(--text);border-radius:14px;padding:10px 14px;font-weight:600;cursor:pointer;box-shadow:var(--shadow)}
+    button,.btn{appearance:none;border:1px solid var(--border);background:#101a35;color:#fff;border-radius:14px;padding:10px 14px;font-weight:600;cursor:pointer;box-shadow:var(--shadow)}
     button.primary{background:#2d7bd9;border-color:#2d7bd9}
     button.success{background:#18a877;border-color:#159569}
     button.danger{background:#e74a3b;border-color:#c0392b}
@@ -193,7 +193,7 @@
         </div>
       </section>
     </div>
-    <p class="footer">PDF: logo grande, cabecera empresa, DATOS DEL CLIENTE, ACTUACIONES/CANTIDAD, Observaciones, fotos y firma.</p>
+    <p class="footer">PDF: logo grande, cabecera empresa, DATOS DEL CLIENTE, EQUIPO ATENDIDO, ACTUACIONES/CANTIDAD, Observaciones, fotos y firma.</p>
   </main>
 
   <!-- jsPDF -->
@@ -339,7 +339,7 @@
       let m1 = a*60+b, m2 = c*60+d; if (m2 < m1) m2 += 24*60;
       const dif = m2 - m1; return Math.floor(dif/60)+':'+pad2(dif%60);
     }
-    function escapeHTML(str=''){ return str.replace(/[&<>\"']/g, m => ({'&':'&amp;','<':'&gt;','&quot;':'&quot;','>':'&gt;',"'":'&#39;'}[m])); }
+    function escapeHTML(str=''){ return str.replace(/[&<>\"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
     /* ===== Form data ===== */
     function formDataToObj(asignarConsecutivo){
@@ -361,13 +361,8 @@
       };
     }
 
-    /* ===== Duplicar datos =====
-       - Nuevo consecutivo (sin guardar nada).
-       - Mantiene: cliente, responsable, telefono, marca, modelo, serie, actuacion, cantidad, estado.
-       - Limpia: falla, acciones, repuestos, horas, fotos, firma.
-       - Fecha/hora: actuales. */
+    /* ===== Duplicar datos ===== */
     document.getElementById('duplicar').addEventListener('click', ()=>{
-      // Pre-captura de campos a mantener
       const keep = {
         cliente: document.getElementById('cliente').value.trim(),
         responsable: document.getElementById('responsable').value.trim(),
@@ -379,11 +374,8 @@
         cantidad: document.getElementById('cantidad').value,
         estado: document.getElementById('estado').value
       };
-      // Nuevo consecutivo (no incrementa contador aún, solo vista previa del siguiente)
       document.getElementById('numReporte').value = peekConsecutivo();
-      // Fecha y horas actuales
       initFechaHora();
-      // Restaura keep
       document.getElementById('cliente').value = keep.cliente;
       document.getElementById('responsable').value = keep.responsable;
       document.getElementById('telefono').value = keep.telefono;
@@ -393,7 +385,6 @@
       document.getElementById('actuacion').value = keep.actuacion;
       document.getElementById('cantidad').value = keep.cantidad;
       document.getElementById('estado').value = keep.estado;
-      // Limpia campos variables
       document.getElementById('falla').value = '';
       document.getElementById('acciones').value = '';
       document.getElementById('repuestos').value = '';
@@ -403,7 +394,7 @@
       toast('Datos duplicados para un nuevo reporte');
     });
 
-    /* ===== Cargar y tabla (por si usas guardar en el futuro) ===== */
+    /* ===== Cargar/tabla (opcional) ===== */
     function loadToForm(r){
       document.getElementById('numReporte').value = r.consecutivo;
       document.getElementById('fecha').value = r.fecha;
@@ -457,13 +448,14 @@
       }));
     }
 
-    /* ===== PDF ===== */
+    /* ===== PDF (incluye EQUIPO ATENDIDO) ===== */
     function generarPDF(sourceObj){
-      const obj = sourceObj || formDataToObj(true); // aquí sí asigno el consecutivo definitivo
+      const obj = sourceObj || formDataToObj(true); // asigna consecutivo definitivo aquí
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ unit:'pt', format:'a4' });
       const M = 36; let y = M;
 
+      // Cabecera
       if (obj.logo){ try { doc.addImage(obj.logo, 'PNG', M, y, 150, 75); } catch(e) {} }
       const rightX = M + 170;
       doc.setFont('helvetica','bold'); doc.setFontSize(12);
@@ -476,6 +468,7 @@
 
       y += 110; doc.setDrawColor(100,120,150); doc.setLineWidth(0.7); doc.line(M, y, 595-M, y);
 
+      // OT y tiempos
       y += 18; doc.setFont('helvetica','bold'); doc.setFontSize(12);
       doc.text(`Num. Orden de trabajo: ${String(obj.consecutivo).padStart(5,'0')}`, M, y);
 
@@ -485,22 +478,31 @@
       doc.text(`Hora Fin: ${obj.horaFin}`,   M+340, y);
       doc.text(`Tiempo: ${obj.duracion}`,    595 - M, y, { align:'right' });
 
+      // Datos cliente
       y += 22; doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('DATOS DEL CLIENTE', M, y);
       doc.setFont('helvetica','normal'); doc.setFontSize(10);
       y += 16; doc.text(`Cliente: ${obj.cliente || '-'}`, M, y);
       y += 16; doc.text(`Responsable: ${obj.responsable || '-'}`, M, y);
       if (obj.telefono){ y += 16; doc.text(`Teléfono: ${obj.telefono}`, M, y); }
 
+      // EQUIPO ATENDIDO (nuevo bloque)
       y += 12; doc.setDrawColor(100,120,150); doc.line(M, y, 595-M, y);
+      y += 18; doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('EQUIPO ATENDIDO', M, y);
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      y += 16; doc.text(`Marca:  ${obj.marca || '-'}`, M, y);
+      y += 16; doc.text(`Modelo: ${obj.modelo || '-'}`, M, y);
+      y += 16; doc.text(`Serie:  ${obj.serie || '-'}`, M, y);
 
+      // Actuaciones / Cantidad
+      y += 12; doc.setDrawColor(100,120,150); doc.line(M, y, 595-M, y);
       y += 18; doc.setFont('helvetica','bold'); doc.setFontSize(11);
       doc.text('ACTUACIONES', M, y); doc.text('CANTIDAD', 595-M, y, { align:'right' });
       y += 14; doc.setFont('helvetica','normal'); doc.setFontSize(10);
       doc.text(String(obj.actuacion || '-'), M, y);
       doc.text(String(obj.cantidad || '1'),  595-M, y, { align:'right' });
 
+      // Observaciones
       y += 16; doc.setDrawColor(100,120,150); doc.line(M, y, 595-M, y);
-
       y += 18; doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('Observaciones:', M, y);
       y += 14; doc.setFont('helvetica','normal'); doc.setFontSize(10);
       const obsLines = doc.splitTextToSize(obj.acciones || '-', 595 - 2*M);
@@ -509,8 +511,8 @@
         doc.text(line, M, y); y += 12;
       }
 
+      // Fotos
       if (y < doc.internal.pageSize.getHeight() - 80){ y += 6; doc.setDrawColor(100,120,150); doc.line(M, y, 595-M, y); }
-
       if (obj.fotos && obj.fotos.length){
         doc.setFont('helvetica','bold'); doc.setFontSize(11);
         for (let i=0;i<obj.fotos.length && i<10;i++){
@@ -522,14 +524,17 @@
         }
       }
 
+      // Firma
       if (y > doc.internal.pageSize.getHeight() - 210){ doc.addPage(); y = M; }
       doc.setDrawColor(60,80,120); doc.rect(M, y, 360, 140);
       doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('Firma del cliente / conformidad', M+8, y+16);
       if (obj.firma){ try { doc.addImage(obj.firma, 'PNG', M+10, y+26, 340, 110); } catch(e) {} }
 
+      // Pie
       doc.setDrawColor(200,210,230); doc.line(M, 820, 595-M, 820);
       doc.setFontSize(8); doc.setTextColor(120,140,170); doc.text('Generado localmente — sin Service Worker.', M, 834);
 
+      // Descarga / iOS
       const nombre = `OT_${String(obj.consecutivo).padStart(5,'0')}_${(obj.cliente||'Cliente').replace(/[^a-z0-9\-_]+/gi,'_')}.pdf`;
       const blobUrl = doc.output('bloburl');
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
