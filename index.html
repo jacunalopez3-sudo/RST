@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
   <style>
     :root { --bg:#0b1020; --card:#121a34; --muted:#8aa0c6; --text:#ebf0ff; --border:#253055; --shadow:0 10px 30px rgba(0,0,0,.35); --radius:18px; }
     *{box-sizing:border-box} html,body{height:100%}
@@ -20,41 +21,29 @@
     .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
     .card h2{margin:0 0 10px;font-size:1.1rem}
     label{display:block;margin:10px 0 6px;color:var(--muted);font-size:.92rem}
-    input[type="text"],input[type="number"],input[type="date"],input[type="time"],textarea,select{width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:#0f1732;color:var(--text);outline:none}
+    input[type="text"],input[type="number"],input[type="date"],input[type="time"],input[type="email"],textarea,select{
+      width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:#0f1732;color:var(--text);outline:none
+    }
     textarea{min-height:90px;resize:vertical}
     .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
     .grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px}
     .muted{color:var(--muted);font-size:.9rem}
     .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
-    button,.btn{appearance:none;border:1px solid var(--border);background:#101a35;color:#fff;border-radius:14px;padding:10px 14px;font-weight:600;cursor:pointer;box-shadow:var(--shadow)}
+    button,.btn{appearance:none;border:1px solid var(--border);background:#101a35;color:var(--text);border-radius:14px;padding:10px 14px;font-weight:600;cursor:pointer;box-shadow:var(--shadow)}
     button.primary{background:#2d7bd9;border-color:#2d7bd9}
     button.success{background:#18a877;border-color:#159569}
     button.danger{background:#e74a3b;border-color:#c0392b}
+
     .thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;margin-top:8px}
-    .thumbs .item{position:relative}
     .thumbs img{width:100%;height:74px;object-fit:cover;border-radius:10px;border:1px solid var(--border)}
-    .thumbs .tag{position:absolute;left:6px;top:6px;background:#0009;padding:2px 6px;border-radius:8px;font-size:.75rem}
-    .thumbs .del{position:absolute;right:6px;top:6px;background:#c0392b;border:none;border-radius:50%;width:22px;height:22px;color:#fff;cursor:pointer}
-    /* Firma GRANDE (casi pantalla) */
-    .firma-wrap{margin-top:16px}
-    canvas#sigPad{
-      width:100%;
-      height:48vh;
-      max-height:520px;
-      min-height:320px;
-      background:#0f1732;
-      border:2px dashed #2c3b6a;
-      border-radius:14px
-    }
-    table{width:100%;border-collapse:collapse}
-    th,td{padding:10px;border-bottom:1px solid var(--border);text-align:left}
-    th{color:var(--muted);font-weight:600}
-    .right{text-align:right}
-    .nowrap{white-space:nowrap}
+    canvas#sigPad{width:100%;height:170px;background:#0f1732;border:1px dashed #2c3b6a;border-radius:12px}
+
     .footer{color:var(--muted);font-size:.85rem;margin-top:8px}
+    .hidden{display:none !important;}
   </style>
 </head>
+
 <body>
   <header>
     <div class="wrap"><h1>Reportes Técnicos – Versión Simple (sin offline)</h1></div>
@@ -65,6 +54,7 @@
       <!-- Formulario -->
       <section class="card">
         <h2>Nuevo reporte</h2>
+
         <form id="reporteForm">
           <div class="grid-4">
             <div>
@@ -92,26 +82,27 @@
             </div>
             <div>
               <label>Responsable en sitio</label>
-              <select id="responsable" required>
-                <option value="Ing. Juan Carlos Acuña">Ing. Juan Carlos Acuña</option>
-                <option value="Ing. Leonardo Chacón">Ing. Leonardo Chacón</option>
-              </select>
+              <input type="text" id="responsable" required />
             </div>
             <div>
-              <label>Teléfono cliente (opcional)</label>
-              <input type="text" id="telefono" placeholder="Ej. 8888-8888" />
+              <label>Correo del cliente (para enviar PDF)</label>
+              <input type="email" id="correo" placeholder="cliente@ejemplo.com" />
             </div>
           </div>
 
           <h3 class="muted">Equipo atendido</h3>
-          <div class="grid-3">
-            <div><label>Equipo</label><input type="text" id="equipo" placeholder="Ej. Monitor Multiparámetro" /></div>
+
+          <!-- CAMBIO: ahora es grid-4 y agregamos ACTIVO -->
+          <div class="grid-4">
             <div><label>Marca</label><input type="text" id="marca" required /></div>
             <div><label>Modelo</label><input type="text" id="modelo" required /></div>
-          </div>
-          <div class="grid-3">
             <div><label>N° de serie</label><input type="text" id="serie" required /></div>
-            <div><label>Actuación</label>
+            <div><label>Activo</label><input type="text" id="activo" placeholder="Ej. Código interno" /></div>
+          </div>
+
+          <div class="grid-2">
+            <div>
+              <label>Actuación</label>
               <select id="actuacion">
                 <option>Mtto Preventivo</option>
                 <option>Mtto Correctivo</option>
@@ -125,7 +116,8 @@
             </div>
           </div>
 
-          <!-- Eliminado: Descripción de falla / solicitud -->
+          <label>Descripción de falla / solicitud</label>
+          <textarea id="falla" required></textarea>
 
           <label>Observaciones / diagnóstico</label>
           <textarea id="acciones" required></textarea>
@@ -144,60 +136,45 @@
             </div>
           </div>
 
-          <label>Fotografías (hasta 10) — cámara o carrete (se comprimen automáticamente)</label>
-          <input type="file" id="fotos" accept="image/*" multiple />
-          <div class="btns">
-            <button type="button" id="addMore" class="btn">Añadir fotos</button>
-            <button type="button" id="clearPhotos" class="btn danger">Limpiar fotos</button>
-            <span id="photoCount" class="muted"></span>
-          </div>
+          <label>Fotografías (evidencia) — usa la cámara del móvil</label>
+          <input type="file" id="fotos" accept="image/*" capture="environment" multiple />
           <div id="thumbs" class="thumbs"></div>
 
           <div class="grid-2">
             <div>
               <label>Logo empresa (opcional)</label>
               <input type="file" id="logo" accept="image/*" />
-              <div class="btns"><button type="button" id="fijarLogo" class="btn">Guardar logo como fijo</button></div>
+              <div class="btns">
+                <button type="button" id="fijarLogo" class="btn">Guardar logo como fijo</button>
+              </div>
             </div>
-            <div></div>
-          </div>
-
-          <!-- FIRMA GRANDE -->
-          <div class="firma-wrap">
-            <label>Firma del cliente (trazo grande)</label>
-            <canvas id="sigPad"></canvas>
-            <div class="btns">
-              <button type="button" id="limpiarFirma" class="btn">Limpiar firma</button>
+            <div>
+              <label>Firma del cliente</label>
+              <canvas id="sigPad"></canvas>
+              <div class="btns">
+                <button type="button" id="limpiarFirma" class="btn">Limpiar firma</button>
+              </div>
             </div>
           </div>
 
           <div class="btns">
-            <button type="button" id="duplicar" class="btn primary">Duplicar datos</button>
+            <button type="button" class="primary" id="guardar">Guardar local</button>
             <button type="button" class="success" id="pdf">Generar PDF</button>
-            <button type="reset" id="resetForm" class="danger">Limpiar formulario</button>
+            <button type="reset" class="danger" id="limpiarForm">Limpiar formulario</button>
           </div>
+
           <div class="footer">Consecutivo y datos en <strong>localStorage</strong>. Sin Service Worker.</div>
         </form>
       </section>
 
-      <!-- Lista (opcional) -->
-      <section class="card">
-        <h2>Reportes guardados</h2>
-        <table>
-          <thead><tr><th>Reporte</th><th>Fecha</th><th>Cliente</th><th>Equipo</th><th class="right">Acciones</th></tr></thead>
-          <tbody id="tabla"></tbody>
-        </table>
-        <div class="btns">
-          <button id="exportarTodo" class="btn">Exportar JSON</button>
-          <button id="importarBtn" class="btn">Importar JSON</button>
-          <input type="file" id="importarInput" accept="application/json" style="display:none" />
-        </div>
+      <!-- CAMBIO: Eliminamos/ocultamos completamente “Reportes guardados” -->
+      <section class="card hidden" id="panelGuardados">
+        <!-- Intencionalmente oculto -->
       </section>
     </div>
-    <p class="footer">PDF: marco sobrio, logo grande, cabecera, DATOS DEL CLIENTE, EQUIPO ATENDIDO, ACTUACIONES/CANTIDAD, Observaciones, IMÁGENES (Foto 1 inmediatamente), resto de fotos y firma.</p>
   </main>
 
-  <!-- jsPDF -->
+  <!-- jsPDF (UMD) con fallback -->
   <script id="jspdf-cdn"
           src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"
           onload="window.__JSPDF_OK=true"></script>
@@ -210,47 +187,55 @@
     }
   </script>
 
-  <!-- Signature Pad -->
+  <!-- Signature Pad (UMD) -->
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@5.0.10/dist/signature_pad.umd.min.js"></script>
 
   <script>
-    /* ===== Cabecera empresa ===== */
+    /*************** Datos de empresa (cabecera PDF) — edítalos a gusto ***************/
     const HEADER = {
-      company: 'Bennu Healthcare Solutions',
-      legalId: '3-101804878',
-      address: 'Uruca, San José',
-      email: 'serviciotecncio@bennucr.com',
-      phone: '6037-4749'
+      company:   'Bennu Healthcare Solutions',
+      legalId:   '3-101804878',
+      address:   'Sabana Sur, Mata Redonda, Centro Comercial del Sur',
+      email:     'jacuna@bennucr.com',
+      phone:     'Teléfono: 83485676',
+      technician:'Técnico: Ing. Juan Carlos Acuña Lopez'
     };
-    const DEFAULT_LOGO_URL = './logo.png';
 
-    /* ===== Persistencia ===== */
+    /*************** Persistencia: reportes + consecutivo + logo fijo ***************/
     const LS_KEY_REPORTES = 'reportes_simple_list';
-    const LS_KEY_CONSEC   = 'reportes_simple_consecutivo';
+    const LS_KEY_CONSEC   = 'reportes_simple_consecutivo'; // arranca en 56 -> siguiente 57
     const LS_KEY_LOGO     = 'reportes_simple_logo_fijo';
 
-    function loadReportes(){ try{ return JSON.parse(localStorage.getItem(LS_KEY_REPORTES) || '[]'); }catch(e){ return []; } }
-    function saveReportes(arr){ try{ localStorage.setItem(LS_KEY_REPORTES, JSON.stringify(arr)); }catch(e){} }
-    function getNextConsecutivo(){ let n = parseInt(localStorage.getItem(LS_KEY_CONSEC) || '56', 10); const next = n + 1; try{ localStorage.setItem(LS_KEY_CONSEC, String(next)); }catch(e){} return next; }
-    function peekConsecutivo(){ let n = parseInt(localStorage.getItem(LS_KEY_CONSEC) || '56', 10); return n + 1; }
-
-    function getLogoFijo(){ return localStorage.getItem(LS_KEY_LOGO); }
-    function setLogoFijo(dataURL){ try{ localStorage.setItem(LS_KEY_LOGO, dataURL); }catch(e){} }
-    async function tryLoadDefaultLogo(){
-      if (getLogoFijo()) return;
-      try {
-        const res = await fetch(DEFAULT_LOGO_URL, { cache:'no-store' });
-        if (!res.ok) return;
-        const blob = await res.blob();
-        const reader = new FileReader();
-        reader.onload = () => setLogoFijo(reader.result);
-        reader.readAsDataURL(blob);
-      } catch(_) {}
+    function loadReportes(){
+      try{ return JSON.parse(localStorage.getItem(LS_KEY_REPORTES) || '[]'); }
+      catch(e){ return []; }
+    }
+    function saveReportes(arr){
+      try{ localStorage.setItem(LS_KEY_REPORTES, JSON.stringify(arr)); }
+      catch(e){ alert('No se pudo guardar. Revisa espacio/privacidad del navegador.'); }
     }
 
-    /* ===== Firma ===== */
+    function getNextConsecutivo(){
+      let n = parseInt(localStorage.getItem(LS_KEY_CONSEC) || '56', 10);
+      const next = n + 1;
+      localStorage.setItem(LS_KEY_CONSEC, String(next));
+      return next;
+    }
+    function peekConsecutivo(){
+      let n = parseInt(localStorage.getItem(LS_KEY_CONSEC) || '56', 10);
+      return n + 1;
+    }
+
+    function getLogoFijo(){ return localStorage.getItem(LS_KEY_LOGO); }
+    function setLogoFijo(dataURL){
+      try{ localStorage.setItem(LS_KEY_LOGO, dataURL); }
+      catch(e){ alert('No se pudo guardar el logo.'); }
+    }
+
+    /*************** Firma ***************/
     const canvas = document.getElementById('sigPad');
     const signaturePad = new window.SignaturePad(canvas, { backgroundColor: 'rgba(0,0,0,0)' });
+
     function resizeCanvas(){
       const ratio = Math.max(window.devicePixelRatio || 1, 1);
       canvas.width = canvas.offsetWidth * ratio;
@@ -262,71 +247,49 @@
     window.addEventListener('orientationchange', resizeCanvas);
     document.getElementById('limpiarFirma').addEventListener('click', () => signaturePad.clear());
 
-    /* ===== Logo ===== */
+    /*************** Logo ***************/
     const logoInput = document.getElementById('logo');
     let logoDataURL = getLogoFijo() || null;
+
     logoInput.addEventListener('change', async (ev) => {
       const f = ev.target.files?.[0];
       logoDataURL = f ? await fileToDataURL(f) : null;
     });
+
     document.getElementById('fijarLogo').addEventListener('click', () => {
       if (!logoDataURL) { alert('Carga un logo primero.'); return; }
-      setLogoFijo(logoDataURL); toast('Logo fijo guardado');
+      setLogoFijo(logoDataURL);
+      toast('Logo fijo guardado');
     });
 
-    /* ===== Fotos (compresión automática) ===== */
-    const MAX_FOTOS = 10;
+    /*************** Fotos ***************/
     const fotosInput = document.getElementById('fotos');
     const thumbs = document.getElementById('thumbs');
-    const photoCount = document.getElementById('photoCount');
     let fotosDataURLs = [];
-
-    function updatePhotoCount(){ photoCount.textContent = `(${fotosDataURLs.length}/${MAX_FOTOS})`; }
-    function addThumb(url, idx){
-      const div = document.createElement('div'); div.className='item';
-      const img = document.createElement('img'); img.src = url;
-      const tag = document.createElement('span'); tag.className='tag'; tag.textContent = `FOTO ${idx}`;
-      const x = document.createElement('button'); x.className='del'; x.textContent='×';
-      x.addEventListener('click', ()=> { const i=fotosDataURLs.indexOf(url); if(i>=0){fotosDataURLs.splice(i,1); refreshThumbs(); }});
-      div.appendChild(img); div.appendChild(tag); div.appendChild(x);
-      thumbs.appendChild(div);
-    }
-    function refreshThumbs(){ thumbs.innerHTML=''; fotosDataURLs.forEach((u,i)=> addThumb(u, i+1)); updatePhotoCount(); }
 
     fotosInput.addEventListener('change', async (ev) => {
       const files = Array.from(ev.target.files || []);
-      if (!files.length) return;
-      for (const f of files){
-        if (fotosDataURLs.length >= MAX_FOTOS) { toast('Límite de 10 fotos alcanzado'); break; }
+      fotosDataURLs = [];
+      thumbs.innerHTML = '';
+      for (const f of files) {
         const url = await fileToDataURL(f);
-        const compressed = await compressDataUrl(url, 1600, 0.72);
-        fotosDataURLs.push(compressed);
+        fotosDataURLs.push(url);
+        const img = document.createElement('img');
+        img.src = url;
+        thumbs.appendChild(img);
       }
-      refreshThumbs();
-      fotosInput.value = '';
     });
 
-    document.getElementById('addMore').addEventListener('click', ()=> fotosInput.click());
-    document.getElementById('clearPhotos').addEventListener('click', ()=>{ fotosDataURLs = []; refreshThumbs(); });
-
-    function fileToDataURL(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
-    function compressDataUrl(dataUrl, maxSide=1600, quality=0.72){
-      return new Promise((resolve)=>{
-        const img = new Image();
-        img.onload = ()=>{
-          let w = img.width, h = img.height;
-          const r = w>h ? maxSide/w : maxSide/h;
-          if (r < 1){ w = Math.round(w*r); h = Math.round(h*r); }
-          const c = document.createElement('canvas'); c.width=w; c.height=h;
-          const ctx = c.getContext('2d'); ctx.drawImage(img,0,0,w,h);
-          resolve(c.toDataURL('image/jpeg', quality));
-        };
-        img.onerror = ()=> resolve(dataUrl);
-        img.src = dataUrl;
+    function fileToDataURL(file){
+      return new Promise((res,rej)=>{
+        const r = new FileReader();
+        r.onload = ()=>res(r.result);
+        r.onerror = rej;
+        r.readAsDataURL(file);
       });
     }
 
-    /* ===== Utilidades ===== */
+    /*************** Utilidades ***************/
     function pad2(n){ return (n<10?'0':'') + n; }
     function initFechaHora(){
       const d = new Date();
@@ -338,149 +301,61 @@
     function calcDuracion(h1, h2){
       const [a,b] = h1.split(':').map(Number), [c,d] = h2.split(':').map(Number);
       let m1 = a*60+b, m2 = c*60+d; if (m2 < m1) m2 += 24*60;
-      const dif = m2 - m1; return Math.floor(dif/60)+':'+pad2(dif%60);
+      const dif = m2 - m1;
+      return Math.floor(dif/60)+':'+pad2(dif%60);
     }
-    function escapeHTML(str=''){ return str.replace(/[&<>\"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-    function sanitizeName(s=''){ return (s||'').toString().trim().replace(/[^a-z0-9\-_]+/gi,'_'); }
 
-    /* ===== Form data ===== */
+    /*************** Form data ***************/
     function formDataToObj(asignarConsecutivo){
       const get = id => document.getElementById(id).value.trim();
       const firma = signaturePad.isEmpty() ? null : signaturePad.toDataURL('image/png');
       const id = `${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
       const consecutivo = asignarConsecutivo ? getNextConsecutivo()
-        : parseInt(document.getElementById('numReporte').value || peekConsecutivo(), 10);
+                        : parseInt(document.getElementById('numReporte').value || peekConsecutivo(), 10);
       const dur = calcDuracion(get('horaIni'), get('horaFin'));
+
       return {
         id, consecutivo,
         fecha:get('fecha'), horaIni:get('horaIni'), horaFin:get('horaFin'), duracion:dur,
-        cliente:get('cliente'), responsable:get('responsable'), telefono:get('telefono'),
-        equipo:get('equipo'),
+        cliente:get('cliente'), responsable:get('responsable'), correo:get('correo'),
         marca:get('marca'), modelo:get('modelo'), serie:get('serie'),
+        activo:get('activo'),                  // ✅ NUEVO CAMPO
         actuacion:get('actuacion'), cantidad:get('cantidad'),
-        acciones:get('acciones'),
+        falla:get('falla'), acciones:get('acciones'),
         repuestos:get('repuestos'), horas:get('horas'), estado:get('estado'),
-        fotos:[...fotosDataURLs], logo:(logoDataURL || getLogoFijo()), firma
+        fotos:fotosDataURLs,
+        logo:(logoDataURL || getLogoFijo()),
+        firma
       };
     }
 
-    /* ===== Duplicar datos ===== */
-    document.getElementById('duplicar').addEventListener('click', ()=>{
-      const keep = {
-        cliente: document.getElementById('cliente').value.trim(),
-        responsable: document.getElementById('responsable').value.trim(),
-        telefono: document.getElementById('telefono').value.trim(),
-        equipo: document.getElementById('equipo').value.trim(),
-        marca: document.getElementById('marca').value.trim(),
-        modelo: document.getElementById('modelo').value.trim(),
-        serie: document.getElementById('serie').value.trim(),
-        actuacion: document.getElementById('actuacion').value,
-        cantidad: document.getElementById('cantidad').value,
-        estado: document.getElementById('estado').value
-      };
+    /*************** Guardar local ***************/
+    function guardarLocal(){
+      const obj = formDataToObj(true);
+      const arr = loadReportes();
+      arr.push(obj);
+      saveReportes(arr);
+
+      // mostrar siguiente consecutivo
       document.getElementById('numReporte').value = peekConsecutivo();
-      initFechaHora();
-      document.getElementById('cliente').value = keep.cliente;
-      document.getElementById('responsable').value = keep.responsable;
-      document.getElementById('telefono').value = keep.telefono;
-      document.getElementById('equipo').value = keep.equipo;
-      document.getElementById('marca').value = keep.marca;
-      document.getElementById('modelo').value = keep.modelo;
-      document.getElementById('serie').value = keep.serie;
-      document.getElementById('actuacion').value = keep.actuacion;
-      document.getElementById('cantidad').value = keep.cantidad;
-      document.getElementById('estado').value = keep.estado;
-      document.getElementById('acciones').value = '';
-      document.getElementById('repuestos').value = '';
-      document.getElementById('horas').value = '';
-      fotosDataURLs = []; refreshThumbs();
-      signaturePad.clear();
-      toast('Datos duplicados para un nuevo reporte');
-    });
-
-    /* ===== Cargar/tabla (opcional) ===== */
-    function loadToForm(r){
-      document.getElementById('numReporte').value = r.consecutivo;
-      document.getElementById('fecha').value = r.fecha;
-      document.getElementById('horaIni').value = r.horaIni;
-      document.getElementById('horaFin').value = r.horaFin;
-      document.getElementById('cliente').value = r.cliente;
-      document.getElementById('responsable').value = r.responsable;
-      document.getElementById('telefono').value = r.telefono || '';
-      document.getElementById('equipo').value = r.equipo || '';
-      document.getElementById('marca').value = r.marca;
-      document.getElementById('modelo').value = r.modelo;
-      document.getElementById('serie').value = r.serie;
-      document.getElementById('actuacion').value = r.actuacion || 'Mtto Preventivo';
-      document.getElementById('cantidad').value = r.cantidad || '1';
-      document.getElementById('acciones').value = r.acciones;
-      document.getElementById('repuestos').value = r.repuestos || '';
-      document.getElementById('horas').value = r.horas || '';
-      document.getElementById('estado').value = r.estado || 'Operativo';
-
-      fotosDataURLs = r.fotos || []; refreshThumbs();
-      if (r.logo) logoDataURL = r.logo;
-
-      signaturePad.clear();
-      if (r.firma){ const img = new Image(); img.onload = ()=>{ canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height); }; img.src = r.firma; }
+      toast(`Guardado reporte #${obj.consecutivo}`);
     }
+    document.getElementById('guardar').addEventListener('click', guardarLocal);
 
-    async function renderTabla(){
-      const tbody = document.getElementById('tabla');
-      const datos = loadReportes(); datos.sort((a,b)=> b.consecutivo - a.consecutivo);
-      tbody.innerHTML = '';
-      for (const r of datos){
-        const tr = document.createElement('tr');
-        tr.innerHTML =
-          `<td>#${r.consecutivo}</td>
-           <td class="nowrap">${r.fecha} ${r.horaIni}-${r.horaFin}</td>
-           <td>${escapeHTML(r.cliente)}</td>
-           <td>${escapeHTML(r.marca)} ${escapeHTML(r.modelo)} <span class="muted">#${escapeHTML(r.serie)}</span></td>
-           <td class="right">
-             <button class="btn" data-act="pdf" data-id="${r.id}">PDF</button>
-             <button class="btn" data-act="view" data-id="${r.id}">Cargar</button>
-             <button class="btn" data-act="del" data-id="${r.id}">Borrar</button>
-           </td>`;
-        tbody.appendChild(tr);
-      }
-      tbody.querySelectorAll('button').forEach(btn => btn.addEventListener('click', ev => {
-        const id = ev.currentTarget.dataset.id, act = ev.currentTarget.dataset.act;
-        const all = loadReportes(); const r = all.find(x=>x.id===id); if (!r) return;
-        if (act==='del'){ saveReportes(all.filter(x=>x.id!==id)); renderTabla(); toast('Eliminado'); return; }
-        if (act==='view'){ loadToForm(r); toast(`Cargado reporte #${r.consecutivo}`); return; }
-        if (act==='pdf'){ generarPDF(r); return; }
-      }));
-    }
-
-    /* ===== PDF (IMÁGENES tras Observaciones + marco sobrio) ===== */
-    function generarPDF(sourceObj){
-      const obj = sourceObj || formDataToObj(true); // asigna consecutivo definitivo aquí
+    /*************** PDF ***************/
+    function generarPDF(){
+      const obj = formDataToObj(false);
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ unit:'pt', format:'a4' });
-      const M = 36;              // margen de contenido
-      const FRAME = 18;          // margen del marco sobrio
+      const M = 36;
       let y = M;
 
-      // --- helper: dibuja marco sobrio en la página actual ---
-      function drawFrame(){
-        doc.setDrawColor(170,185,205); // gris azulado sobrio
-        doc.setLineWidth(0.8);
-        const w = doc.internal.pageSize.getWidth();
-        const h = doc.internal.pageSize.getHeight();
-        doc.rect(FRAME, FRAME, w - 2*FRAME, h - 2*FRAME); // marco
+      // Logo
+      const logo = obj.logo;
+      if (logo){
+        try { doc.addImage(logo, 'PNG', M, y, 150, 75); } catch(e){}
       }
-      // Monkey-patch: cada vez que se agregue una página, dibujar el marco
-      const _addPage = doc.addPage.bind(doc);
-      doc.addPage = function(...args){
-        const ret = _addPage(...args);
-        drawFrame();
-        return ret;
-      };
-      // marco en la 1ª página
-      drawFrame();
 
-      // ---- Cabecera ----
-      if (obj.logo){ try { doc.addImage(obj.logo, 'PNG', M, y, 150, 75); } catch(e) {} }
       const rightX = M + 170;
       doc.setFont('helvetica','bold'); doc.setFontSize(12);
       doc.text(HEADER.company, rightX, y+14);
@@ -489,152 +364,164 @@
       doc.text(HEADER.address, rightX, y+46);
       doc.text(HEADER.email, rightX, y+62);
       doc.text(HEADER.phone, rightX, y+78);
+      if (HEADER.technician) doc.text(HEADER.technician, rightX, y+94);
 
-      y += 110; doc.setDrawColor(100,120,150); doc.setLineWidth(0.7); doc.line(M, y, 595-M, y);
+      y += 120;
+      doc.setDrawColor(120,140,170);
+      doc.line(M, y, 595-M, y);
 
-      // OT y tiempos
-      y += 18; doc.setFont('helvetica','bold'); doc.setFontSize(12);
+      // Encabezado OT
+      y += 22;
+      doc.setFont('helvetica','bold'); doc.setFontSize(12);
       doc.text(`Num. Orden de trabajo: ${String(obj.consecutivo).padStart(5,'0')}`, M, y);
 
-      y += 18; doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      y += 18;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
       doc.text(`Fecha: ${obj.fecha}`, M, y);
       doc.text(`Hora Inicio: ${obj.horaIni}`, M+180, y);
-      doc.text(`Hora Fin: ${obj.horaFin}`,   M+340, y);
-      doc.text(`Tiempo: ${obj.duracion}`,    595 - M, y, { align:'right' });
+      doc.text(`Hora Fin: ${obj.horaFin}`, M+340, y);
+      doc.text(`Tiempo: ${obj.duracion}`, 595-M, y, { align:'right' });
 
       // Datos cliente
-      y += 22; doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('DATOS DEL CLIENTE', M, y);
+      y += 22;
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text('DATOS DEL CLIENTE', M, y);
       doc.setFont('helvetica','normal'); doc.setFontSize(10);
       y += 16; doc.text(`Cliente: ${obj.cliente || '-'}`, M, y);
       y += 16; doc.text(`Responsable: ${obj.responsable || '-'}`, M, y);
-      if (obj.telefono){ y += 16; doc.text(`Teléfono: ${obj.telefono}`, M, y); }
+      if (obj.correo) { y += 16; doc.text(`Correo: ${obj.correo}`, M, y); }
 
-      // EQUIPO ATENDIDO (con EQUIPO)
-      y += 12; doc.setDrawColor(100,120,150); doc.line(M, y, 595-M, y);
-      y += 18; doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('EQUIPO ATENDIDO', M, y);
+      // Equipo atendido (incluye ACTIVO)
+      y += 18;
+      doc.setDrawColor(120,140,170);
+      doc.line(M, y, 595-M, y);
+
+      y += 18;
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text('EQUIPO ATENDIDO', M, y);
       doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      y += 16; doc.text(`Equipo: ${obj.equipo || '-'}`, M, y);
-      y += 16; doc.text(`Marca:  ${obj.marca || '-'}`, M, y);
+      y += 16; doc.text(`Marca: ${obj.marca || '-'}`, M, y);
       y += 16; doc.text(`Modelo: ${obj.modelo || '-'}`, M, y);
-      y += 16; doc.text(`Serie:  ${obj.serie || '-'}`, M, y);
+      y += 16; doc.text(`Serie: ${obj.serie || '-'}`, M, y);
+      y += 16; doc.text(`Activo: ${obj.activo || '-'}`, M, y);   // ✅ NUEVO EN PDF
 
-      // Actuaciones / Cantidad
-      y += 12; doc.setDrawColor(100,120,150); doc.line(M, y, 595-M, y);
-      y += 18; doc.setFont('helvetica','bold'); doc.setFontSize(11);
-      doc.text('ACTUACIONES', M, y); doc.text('CANTIDAD', 595-M, y, { align:'right' });
-      y += 14; doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      // Actuación / cantidad
+      y += 18;
+      doc.setDrawColor(120,140,170);
+      doc.line(M, y, 595-M, y);
+
+      y += 18;
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text('ACTUACIONES', M, y);
+      doc.text('CANTIDAD', 595-M, y, { align:'right' });
+      y += 14;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
       doc.text(String(obj.actuacion || '-'), M, y);
-      doc.text(String(obj.cantidad || '1'),  595-M, y, { align:'right' });
+      doc.text(String(obj.cantidad || '1'), 595-M, y, { align:'right' });
 
-      // Observaciones
-      y += 16; doc.setDrawColor(100,120,150); doc.line(M, y, 595-M, y);
-      y += 18; doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('Observaciones:', M, y);
-      y += 14; doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      const obsLines = doc.splitTextToSize(obj.acciones || '-', 595 - 2*M);
-      for (const line of obsLines){
-        if (y > doc.internal.pageSize.getHeight() - 80){ doc.addPage(); y = M; }
+      // Falla
+      y += 18;
+      doc.setDrawColor(120,140,170);
+      doc.line(M, y, 595-M, y);
+
+      y += 18;
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text('Descripción de falla / solicitud:', M, y);
+      y += 14;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      const fallaLines = doc.splitTextToSize(obj.falla || '-', 595 - 2*M);
+      for (const line of fallaLines){
+        if (y > 770){ doc.addPage(); y = M; }
         doc.text(line, M, y); y += 12;
       }
 
-      // IMÁGENES + Foto 1 al tiro
-      const pageH = doc.internal.pageSize.getHeight();
-      if (y < pageH - 80){ y += 6; doc.setDrawColor(100,120,150); doc.line(M, y, 595-M, y); }
-      y += 18;
+      // Observaciones
+      y += 8;
       doc.setFont('helvetica','bold'); doc.setFontSize(11);
-      doc.text('Foto 1', M, y);
-
-      if (obj.fotos && obj.fotos.length){
-        const hImg = 320;
-        const need = 6 + hImg + 10;
-        if (y + need > pageH - 60){ doc.addPage(); y = M; }
-        y += 6;
-        try { doc.addImage(obj.fotos[0], 'JPEG', M, y, 595-2*M, hImg); } catch(e) {}
-        y += hImg + 10;
+      doc.text('Observaciones / diagnóstico:', M, y);
+      y += 14;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      const obsLines = doc.splitTextToSize(obj.acciones || '-', 595 - 2*M);
+      for (const line of obsLines){
+        if (y > 770){ doc.addPage(); y = M; }
+        doc.text(line, M, y); y += 12;
       }
 
-      // Resto de fotos (2..10)
-      if (obj.fotos && obj.fotos.length > 1){
-        doc.setFont('helvetica','normal'); doc.setFontSize(10);
-        for (let i=1;i<obj.fotos.length && i<10;i++){
-          const need = 16 + 320 + 10;
-          if (y + need > pageH - 60){ doc.addPage(); y = M; }
-          doc.setFont('helvetica','bold'); doc.text(`FOTO ${i+1}:`, M, y);
-          doc.setFont('helvetica','normal');
-          y += 6;
-          try { doc.addImage(obj.fotos[i], 'JPEG', M, y, 595-2*M, 320); } catch(e) {}
-          y += 320 + 10;
+      // Fotos (si caben; si no, nuevas páginas)
+      if (obj.fotos && obj.fotos.length){
+        for (let i=0;i<obj.fotos.length;i++){
+          if (y > 500){ doc.addPage(); y = M; }
+          y += 10;
+          doc.setFont('helvetica','bold'); doc.setFontSize(10);
+          doc.text(`Foto ${i+1}`, M, y);
+          y += 8;
+          try {
+            doc.addImage(obj.fotos[i], 'JPEG', M, y, 595-2*M, 260);
+          } catch(e){}
+          y += 270;
         }
       }
 
       // Firma
-      if (y > pageH - 210){ doc.addPage(); y = M; }
-      doc.setDrawColor(60,80,120); doc.rect(M, y, 360, 140);
-      doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('Firma del cliente / conformidad', M+8, y+16);
-      if (obj.firma){ try { doc.addImage(obj.firma, 'PNG', M+10, y+26, 340, 110); } catch(e) {} }
-
-      // Pie
-      doc.setDrawColor(200,210,230); doc.line(M, 820, 595-M, 820);
-      doc.setFontSize(8); doc.setTextColor(120,140,170); doc.text('Generado localmente — sin Service Worker.', M, 834);
-
-      // ====== DESCARGA con NOMBRE CORRECTO (iOS y demás) ======
-      const equipoName = sanitizeName(obj.equipo || `${obj.marca||''}_${obj.modelo||''}` || 'Equipo');
-      const nombre = `OT_${String(obj.consecutivo).padStart(5,'0')}_${equipoName}.pdf`;
-
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      if (isIOS) {
-        // iOS Safari respeta mejor el nombre con save()
-        doc.save(nombre);
-      } else {
-        const blob = doc.output('blob'); // Blob real
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = nombre;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(()=> URL.revokeObjectURL(url), 1500);
+      if (y > 650){ doc.addPage(); y = M; }
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text('Firma del cliente / conformidad', M, y);
+      y += 10;
+      doc.setDrawColor(80,100,140);
+      doc.rect(M, y, 360, 130);
+      if (obj.firma){
+        try { doc.addImage(obj.firma, 'PNG', M+10, y+10, 340, 110); } catch(e){}
       }
+
+      // Guardado iOS/Android
+      const nombre = `OT_${String(obj.consecutivo).padStart(5,'0')}_${(obj.cliente||'Cliente').replace(/[^a-z0-9\-_]+/gi,'_')}.pdf`;
+      const blob = doc.output('blob');
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nombre;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 1500);
     }
 
-    /* ===== Exportar/Importar ===== */
-    document.getElementById('exportarTodo').addEventListener('click', ()=>{
-      const datos = loadReportes();
-      const blob = new Blob([JSON.stringify(datos, null, 2)], {type:'application/json'});
-      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'reportes_backup.json'; a.click();
-    });
-    document.getElementById('importarBtn').addEventListener('click', ()=> document.getElementById('importarInput').click());
-    document.getElementById('importarInput').addEventListener('change', async ev =>{
-      const file = ev.target.files?.[0]; if (!file) return;
-      try{ const arr = JSON.parse(await file.text()); if (!Array.isArray(arr)) throw 0;
-        const merged = [...loadReportes(), ...arr]; saveReportes(merged); renderTabla(); toast('Importado');
-      }catch{ alert('Archivo inválido'); }
-    });
-
-    /* ===== Enlaces, reset y arranque ===== */
     function bindPDFWhenReady(){
       if (window.jspdf && window.jspdf.jsPDF) {
         const btn = document.getElementById('pdf');
-        if (btn && !btn.__pdfBound){ btn.addEventListener('click', ()=> generarPDF()); btn.__pdfBound = true; }
+        if (btn && !btn.__pdfBound){
+          btn.addEventListener('click', generarPDF);
+          btn.__pdfBound = true;
+        }
       } else { setTimeout(bindPDFWhenReady, 400); }
     }
     window.addEventListener('load', bindPDFWhenReady);
 
-    document.getElementById('resetForm').addEventListener('click', ()=>{
-      setTimeout(()=>{ document.getElementById('numReporte').value = peekConsecutivo(); }, 0);
-      signaturePad.clear();
-      fotosDataURLs = []; refreshThumbs();
+    /*************** Reset ***************/
+    document.getElementById('limpiarForm').addEventListener('click', ()=>{
+      setTimeout(()=>{
+        signaturePad.clear();
+        fotosDataURLs = [];
+        thumbs.innerHTML = '';
+        document.getElementById('numReporte').value = peekConsecutivo();
+        initFechaHora();
+      }, 0);
     });
 
-    function toast(msg){ const d=document.createElement('div'); d.textContent=msg;
+    /*************** Toast ***************/
+    function toast(msg){
+      const d=document.createElement('div');
+      d.textContent=msg;
       d.style.cssText='position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#101a35;border:1px solid #253055;padding:10px 14px;border-radius:12px;box-shadow:var(--shadow);z-index:9999;color:#ebf0ff;';
-      document.body.appendChild(d); setTimeout(()=>d.remove(),2200);
+      document.body.appendChild(d);
+      setTimeout(()=>d.remove(),2200);
     }
-    async function init(){
-      resizeCanvas(); initFechaHora();
+
+    /*************** Init ***************/
+    function init(){
+      resizeCanvas();
+      initFechaHora();
       document.getElementById('numReporte').value = peekConsecutivo();
-      await tryLoadDefaultLogo();
-      renderTabla(); refreshThumbs(); updatePhotoCount();
     }
     init();
   </script>
