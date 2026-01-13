@@ -10,46 +10,138 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
   <style>
-    :root { --bg:#0b1020; --card:#121a34; --muted:#8aa0c6; --text:#ebf0ff; --border:#253055; --shadow:0 10px 30px rgba(0,0,0,.35); --radius:18px; }
-    *{box-sizing:border-box} html,body{height:100%}
-    body{margin:0;font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:linear-gradient(180deg,#0a0f1e,#0b1228 40%,#09102a);color:var(--text)}
-    header{position:sticky;top:0;z-index:5;background:rgba(9,16,42,.7);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
-    .wrap{max-width:1200px;margin:0 auto;padding:18px}
-    h1{margin:0;font-size:1.4rem;font-weight:800}
-    .row{display:grid;grid-template-columns:1fr;gap:18px}
-    @media (min-width:1100px){.row{grid-template-columns:560px 1fr;align-items:start}}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
-    .card h2{margin:0 0 10px;font-size:1.1rem}
-    label{display:block;margin:10px 0 6px;color:var(--muted);font-size:.92rem}
-    input[type="text"],input[type="number"],input[type="date"],input[type="time"],input[type="email"],textarea,select{
-      width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:#0f1732;color:var(--text);outline:none
+    :root{
+      --bg:#0b1020; --card:#121a34; --muted:#8aa0c6; --text:#ebf0ff;
+      --border:#253055; --shadow:0 10px 30px rgba(0,0,0,.35); --radius:18px;
     }
-    textarea{min-height:90px;resize:vertical}
-    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-    .grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px}
-    .muted{color:var(--muted);font-size:.9rem}
-    .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
-    button,.btn{appearance:none;border:1px solid var(--border);background:#101a35;color:var(--text);border-radius:14px;padding:10px 14px;font-weight:600;cursor:pointer;box-shadow:var(--shadow)}
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      background:linear-gradient(180deg,#0a0f1e,#0b1228 40%,#09102a);
+      color:var(--text);
+      font-size:16px;
+    }
+
+    header{
+      position:sticky;top:0;z-index:5;
+      background:rgba(9,16,42,.75);
+      backdrop-filter:blur(10px);
+      border-bottom:1px solid var(--border)
+    }
+
+    /* ✅ FULL WIDTH */
+    .wrap{
+      max-width:1600px;       /* antes 1200 */
+      margin:0 auto;
+      padding:20px;
+    }
+
+    h1{margin:0;font-size:1.55rem;font-weight:800}
+    .row{display:grid;grid-template-columns:1fr;gap:18px}
+
+    /* ✅ Siempre 1 columna (formulario ocupa todo); ya no “deja espacio” */
+    @media (min-width:900px){
+      .row{grid-template-columns:1fr;}
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:20px;           /* más aire */
+    }
+
+    .card h2{margin:0 0 12px;font-size:1.25rem}
+
+    label{
+      display:block;
+      margin:12px 0 8px;
+      color:var(--muted);
+      font-size:1rem;         /* más grande */
+      font-weight:600;
+    }
+
+    input[type="text"],input[type="number"],input[type="date"],input[type="time"],input[type="email"],textarea,select{
+      width:100%;
+      padding:14px 14px;      /* más grande */
+      border-radius:14px;
+      border:1px solid var(--border);
+      background:#0f1732;
+      color:var(--text);
+      outline:none;
+      font-size:1.05rem;      /* más grande */
+    }
+
+    textarea{min-height:130px;resize:vertical}
+
+    /* ✅ Grids responsivos: en móvil bajan de columnas */
+    .grid-2{display:grid;grid-template-columns:1fr;gap:14px}
+    .grid-3{display:grid;grid-template-columns:1fr;gap:14px}
+    .grid-4{display:grid;grid-template-columns:1fr;gap:14px}
+
+    @media (min-width:700px){
+      .grid-2{grid-template-columns:1fr 1fr}
+      .grid-3{grid-template-columns:1fr 1fr 1fr}
+      .grid-4{grid-template-columns:1fr 1fr 1fr 1fr}
+    }
+
+    .muted{color:var(--muted);font-size:1rem}
+    .btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px}
+
+    button,.btn{
+      appearance:none;
+      border:1px solid var(--border);
+      background:#101a35;
+      color:var(--text);
+      border-radius:16px;
+      padding:12px 16px;       /* botones más grandes */
+      font-weight:700;
+      cursor:pointer;
+      box-shadow:var(--shadow);
+      font-size:1.05rem;
+    }
     button.primary{background:#2d7bd9;border-color:#2d7bd9}
     button.success{background:#18a877;border-color:#159569}
     button.danger{background:#e74a3b;border-color:#c0392b}
-    .thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;margin-top:8px}
-    .thumbs img{width:100%;height:74px;object-fit:cover;border-radius:10px;border:1px solid var(--border)}
-    canvas#sigPad{width:100%;height:170px;background:#0f1732;border:1px dashed #2c3b6a;border-radius:12px}
-    .footer{color:var(--muted);font-size:.85rem;margin-top:8px}
+
+    .thumbs{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(110px,1fr));
+      gap:10px;
+      margin-top:10px
+    }
+    .thumbs img{
+      width:100%;
+      height:100px;
+      object-fit:cover;
+      border-radius:12px;
+      border:1px solid var(--border)
+    }
+
+    /* ✅ Firma más grande */
+    canvas#sigPad{
+      width:100%;
+      height:220px;            /* antes 170 */
+      background:#0f1732;
+      border:1px dashed #2c3b6a;
+      border-radius:14px
+    }
+
+    .footer{color:var(--muted);font-size:.95rem;margin-top:10px}
     .hidden{display:none !important;}
   </style>
 </head>
 
 <body>
   <header>
-    <div class="wrap"><h1>Reportes Técnicos – Versión Simple (sin offline)</h1></div>
+    <div class="wrap"><h1>Reportes Técnicos – Versión Simple</h1></div>
   </header>
 
   <main class="wrap">
     <div class="row">
-      <!-- Formulario -->
       <section class="card">
         <h2>Nuevo reporte</h2>
 
@@ -61,476 +153,3 @@
             </div>
             <div>
               <label>Fecha</label>
-              <input type="date" id="fecha" required />
-            </div>
-            <div>
-              <label>Hora inicio</label>
-              <input type="time" id="horaIni" required />
-            </div>
-            <div>
-              <label>Hora fin</label>
-              <input type="time" id="horaFin" required />
-            </div>
-          </div>
-
-          <div class="grid-3">
-            <div>
-              <label>Cliente / Clínica / Hospital</label>
-              <input type="text" id="cliente" required placeholder="Ej. Clínica Santa María" />
-            </div>
-            <div>
-              <label>Responsable en sitio</label>
-              <input type="text" id="responsable" required />
-            </div>
-            <div>
-              <label>Correo del cliente (para enviar PDF)</label>
-              <input type="email" id="correo" placeholder="cliente@ejemplo.com" />
-            </div>
-          </div>
-
-          <h3 class="muted">Equipo atendido</h3>
-
-          <div class="grid-4">
-            <div><label>Marca</label><input type="text" id="marca" required /></div>
-            <div><label>Modelo</label><input type="text" id="modelo" required /></div>
-            <div><label>N° de serie</label><input type="text" id="serie" required /></div>
-            <div><label>Activo</label><input type="text" id="activo" placeholder="Ej. Código interno" /></div>
-          </div>
-
-          <div class="grid-2">
-            <div>
-              <label>Actuación</label>
-              <select id="actuacion">
-                <option>Mtto Preventivo</option>
-                <option>Mtto Correctivo</option>
-                <option>Instalación de Repuesto</option>
-                <option>Otro</option>
-              </select>
-            </div>
-            <div>
-              <label>Cantidad</label>
-              <input type="number" id="cantidad" step="0.1" min="0" value="1" />
-            </div>
-          </div>
-
-          <!-- ✅ CAMBIO: se elimina “Descripción de falla / solicitud” -->
-
-          <label>Observaciones / diagnóstico</label>
-          <textarea id="acciones" required></textarea>
-
-          <div class="grid-3">
-            <div><label>Repuestos utilizados</label><input type="text" id="repuestos" placeholder="Separar por coma" /></div>
-            <div><label>Horas trabajadas</label><input type="number" id="horas" step="0.1" min="0" value="1" /></div>
-            <div>
-              <label>Estado final</label>
-              <select id="estado">
-                <option>Operativo</option>
-                <option>Operativo con observaciones</option>
-                <option>En espera de repuesto</option>
-                <option>No operativo</option>
-              </select>
-            </div>
-          </div>
-
-          <label>Fotografías (evidencia) — usa la cámara del móvil</label>
-          <input type="file" id="fotos" accept="image/*" capture="environment" multiple />
-          <div id="thumbs" class="thumbs"></div>
-
-          <div class="grid-2">
-            <div>
-              <label>Logo empresa (opcional)</label>
-              <input type="file" id="logo" accept="image/*" />
-              <div class="btns">
-                <button type="button" id="fijarLogo" class="btn">Guardar logo como fijo</button>
-              </div>
-            </div>
-            <div>
-              <label>Firma del cliente</label>
-              <canvas id="sigPad"></canvas>
-              <div class="btns">
-                <button type="button" id="limpiarFirma" class="btn">Limpiar firma</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="btns">
-            <button type="button" class="primary" id="guardar">Guardar local</button>
-            <button type="button" class="success" id="pdf">Generar PDF</button>
-            <button type="reset" class="danger" id="limpiarForm">Limpiar formulario</button>
-          </div>
-
-          <div class="footer">
-            Consecutivo y datos en <strong>localStorage</strong>. Sin Service Worker.
-            <br/>✅ El consecutivo sube automáticamente al generar PDF.
-          </div>
-        </form>
-      </section>
-
-      <!-- Oculto: Reportes guardados -->
-      <section class="card hidden" id="panelGuardados"></section>
-    </div>
-  </main>
-
-  <!-- jsPDF (UMD) con fallback -->
-  <script id="jspdf-cdn"
-          src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"
-          onload="window.__JSPDF_OK=true"></script>
-  <script>
-    if (!window.__JSPDF_OK) {
-      var s = document.createElement('script');
-      s.src = 'https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js';
-      s.onload = function(){ window.__JSPDF_OK = true; };
-      document.head.appendChild(s);
-    }
-  </script>
-
-  <!-- Signature Pad (UMD) -->
-  <script src="https://cdn.jsdelivr.net/npm/signature_pad@5.0.10/dist/signature_pad.umd.min.js"></script>
-
-  <script>
-    /*************** Datos de empresa (cabecera PDF) ***************/
-    const HEADER = {
-      company:   'Bennu Healthcare Solutions',
-      legalId:   '3-101804878',
-      address:   'Sabana Sur, Mata Redonda, Centro Comercial del Sur',
-      email:     'jacuna@bennucr.com',
-      phone:     'Teléfono: 83485676',
-      technician:'Técnico: Ing. Juan Carlos Acuña Lopez'
-    };
-
-    /*************** Persistencia ***************/
-    const LS_KEY_REPORTES = 'reportes_simple_list';
-    const LS_KEY_CONSEC   = 'reportes_simple_consecutivo'; // arranca en 56 -> siguiente 57
-    const LS_KEY_LOGO     = 'reportes_simple_logo_fijo';
-
-    function loadReportes(){
-      try{ return JSON.parse(localStorage.getItem(LS_KEY_REPORTES) || '[]'); }
-      catch(e){ return []; }
-    }
-    function saveReportes(arr){
-      try{ localStorage.setItem(LS_KEY_REPORTES, JSON.stringify(arr)); }
-      catch(e){ alert('No se pudo guardar. Revisa espacio/privacidad del navegador.'); }
-    }
-
-    function getNextConsecutivo(){
-      let n = parseInt(localStorage.getItem(LS_KEY_CONSEC) || '56', 10);
-      const next = n + 1;
-      localStorage.setItem(LS_KEY_CONSEC, String(next));
-      return next;
-    }
-    function peekConsecutivo(){
-      let n = parseInt(localStorage.getItem(LS_KEY_CONSEC) || '56', 10);
-      return n + 1;
-    }
-
-    // ✅ NUEVO: “usar y consumir” el número que está visible al generar PDF
-    function consumeDisplayedConsecutivo(){
-      const shown = parseInt(document.getElementById('numReporte').value || peekConsecutivo(), 10);
-      // guardamos el “current” como el número que acabamos de usar
-      localStorage.setItem(LS_KEY_CONSEC, String(shown));
-      // y mostramos el siguiente en pantalla
-      document.getElementById('numReporte').value = shown + 1;
-      return shown;
-    }
-
-    function getLogoFijo(){ return localStorage.getItem(LS_KEY_LOGO); }
-    function setLogoFijo(dataURL){
-      try{ localStorage.setItem(LS_KEY_LOGO, dataURL); }
-      catch(e){ alert('No se pudo guardar el logo.'); }
-    }
-
-    /*************** Firma ***************/
-    const canvas = document.getElementById('sigPad');
-    const signaturePad = new window.SignaturePad(canvas, { backgroundColor: 'rgba(0,0,0,0)' });
-
-    function resizeCanvas(){
-      const ratio = Math.max(window.devicePixelRatio || 1, 1);
-      canvas.width = canvas.offsetWidth * ratio;
-      canvas.height = canvas.offsetHeight * ratio;
-      canvas.getContext('2d').scale(ratio, ratio);
-      signaturePad.clear();
-    }
-    window.addEventListener('resize', resizeCanvas);
-    window.addEventListener('orientationchange', resizeCanvas);
-    document.getElementById('limpiarFirma').addEventListener('click', () => signaturePad.clear());
-
-    /*************** Logo ***************/
-    const logoInput = document.getElementById('logo');
-    let logoDataURL = getLogoFijo() || null;
-
-    logoInput.addEventListener('change', async (ev) => {
-      const f = ev.target.files?.[0];
-      logoDataURL = f ? await fileToDataURL(f) : null;
-    });
-
-    document.getElementById('fijarLogo').addEventListener('click', () => {
-      if (!logoDataURL) { alert('Carga un logo primero.'); return; }
-      setLogoFijo(logoDataURL);
-      toast('Logo fijo guardado');
-    });
-
-    /*************** Fotos ***************/
-    const fotosInput = document.getElementById('fotos');
-    const thumbs = document.getElementById('thumbs');
-    let fotosDataURLs = [];
-
-    fotosInput.addEventListener('change', async (ev) => {
-      const files = Array.from(ev.target.files || []);
-      fotosDataURLs = [];
-      thumbs.innerHTML = '';
-      for (const f of files) {
-        const url = await fileToDataURL(f);
-        fotosDataURLs.push(url);
-        const img = document.createElement('img');
-        img.src = url;
-        thumbs.appendChild(img);
-      }
-    });
-
-    function fileToDataURL(file){
-      return new Promise((res,rej)=>{
-        const r = new FileReader();
-        r.onload = ()=>res(r.result);
-        r.onerror = rej;
-        r.readAsDataURL(file);
-      });
-    }
-
-    /*************** Utilidades ***************/
-    function pad2(n){ return (n<10?'0':'') + n; }
-    function initFechaHora(){
-      const d = new Date();
-      document.getElementById('fecha').value = d.toISOString().slice(0,10);
-      const hhmm = pad2(d.getHours()) + ':' + pad2(d.getMinutes());
-      document.getElementById('horaIni').value = hhmm;
-      document.getElementById('horaFin').value = hhmm;
-    }
-    function calcDuracion(h1, h2){
-      const [a,b] = h1.split(':').map(Number), [c,d] = h2.split(':').map(Number);
-      let m1 = a*60+b, m2 = c*60+d; if (m2 < m1) m2 += 24*60;
-      const dif = m2 - m1;
-      return Math.floor(dif/60)+':'+pad2(dif%60);
-    }
-
-    /*************** Form data ***************/
-    function formDataToObj(consecutivoOverride){
-      const get = id => document.getElementById(id).value.trim();
-      const firma = signaturePad.isEmpty() ? null : signaturePad.toDataURL('image/png');
-      const id = `${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
-      const consecutivo = Number.isFinite(consecutivoOverride)
-        ? consecutivoOverride
-        : parseInt(document.getElementById('numReporte').value || peekConsecutivo(), 10);
-
-      const dur = calcDuracion(get('horaIni'), get('horaFin'));
-
-      return {
-        id, consecutivo,
-        fecha:get('fecha'), horaIni:get('horaIni'), horaFin:get('horaFin'), duracion:dur,
-        cliente:get('cliente'), responsable:get('responsable'), correo:get('correo'),
-        marca:get('marca'), modelo:get('modelo'), serie:get('serie'),
-        activo:get('activo'),
-        actuacion:get('actuacion'), cantidad:get('cantidad'),
-        acciones:get('acciones'),
-        repuestos:get('repuestos'), horas:get('horas'), estado:get('estado'),
-        fotos:fotosDataURLs,
-        logo:(logoDataURL || getLogoFijo()),
-        firma
-      };
-    }
-
-    /*************** Guardar local ***************/
-    function guardarLocal(){
-      const obj = formDataToObj(getNextConsecutivo());
-      const arr = loadReportes();
-      arr.push(obj);
-      saveReportes(arr);
-
-      document.getElementById('numReporte').value = peekConsecutivo();
-      toast(`Guardado reporte #${obj.consecutivo}`);
-    }
-    document.getElementById('guardar').addEventListener('click', guardarLocal);
-
-    /*************** PDF ***************/
-    function generarPDF(){
-      // ✅ toma el número que se ve y automáticamente prepara el siguiente
-      const consecutivoUsado = consumeDisplayedConsecutivo();
-
-      // usamos ese consecutivo fijo en el objeto del PDF
-      const obj = formDataToObj(consecutivoUsado);
-
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ unit:'pt', format:'a4' });
-      const M = 36;
-      let y = M;
-
-      // Logo
-      const logo = obj.logo;
-      if (logo){
-        try { doc.addImage(logo, 'PNG', M, y, 150, 75); } catch(e){}
-      }
-
-      const rightX = M + 170;
-      doc.setFont('helvetica','bold'); doc.setFontSize(12);
-      doc.text(HEADER.company, rightX, y+14);
-      doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      doc.text(HEADER.legalId, rightX, y+30);
-      doc.text(HEADER.address, rightX, y+46);
-      doc.text(HEADER.email, rightX, y+62);
-      doc.text(HEADER.phone, rightX, y+78);
-      if (HEADER.technician) doc.text(HEADER.technician, rightX, y+94);
-
-      y += 120;
-      doc.setDrawColor(120,140,170);
-      doc.line(M, y, 595-M, y);
-
-      // Encabezado OT
-      y += 22;
-      doc.setFont('helvetica','bold'); doc.setFontSize(12);
-      doc.text(`Num. Orden de trabajo: ${String(obj.consecutivo).padStart(5,'0')}`, M, y);
-
-      y += 18;
-      doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      doc.text(`Fecha: ${obj.fecha}`, M, y);
-      doc.text(`Hora Inicio: ${obj.horaIni}`, M+180, y);
-      doc.text(`Hora Fin: ${obj.horaFin}`, M+340, y);
-      doc.text(`Tiempo: ${obj.duracion}`, 595-M, y, { align:'right' });
-
-      // Datos cliente
-      y += 22;
-      doc.setFont('helvetica','bold'); doc.setFontSize(11);
-      doc.text('DATOS DEL CLIENTE', M, y);
-      doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      y += 16; doc.text(`Cliente: ${obj.cliente || '-'}`, M, y);
-      y += 16; doc.text(`Responsable: ${obj.responsable || '-'}`, M, y);
-      if (obj.correo) { y += 16; doc.text(`Correo: ${obj.correo}`, M, y); }
-
-      // Equipo atendido (incluye ACTIVO)
-      y += 18;
-      doc.setDrawColor(120,140,170);
-      doc.line(M, y, 595-M, y);
-
-      y += 18;
-      doc.setFont('helvetica','bold'); doc.setFontSize(11);
-      doc.text('EQUIPO ATENDIDO', M, y);
-      doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      y += 16; doc.text(`Marca: ${obj.marca || '-'}`, M, y);
-      y += 16; doc.text(`Modelo: ${obj.modelo || '-'}`, M, y);
-      y += 16; doc.text(`Serie: ${obj.serie || '-'}`, M, y);
-      y += 16; doc.text(`Activo: ${obj.activo || '-'}`, M, y);
-
-      // Actuación / cantidad
-      y += 18;
-      doc.setDrawColor(120,140,170);
-      doc.line(M, y, 595-M, y);
-
-      y += 18;
-      doc.setFont('helvetica','bold'); doc.setFontSize(11);
-      doc.text('ACTUACIONES', M, y);
-      doc.text('CANTIDAD', 595-M, y, { align:'right' });
-      y += 14;
-      doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      doc.text(String(obj.actuacion || '-'), M, y);
-      doc.text(String(obj.cantidad || '1'), 595-M, y, { align:'right' });
-
-      // Observaciones (único cuadro)
-      y += 18;
-      doc.setDrawColor(120,140,170);
-      doc.line(M, y, 595-M, y);
-
-      y += 18;
-      doc.setFont('helvetica','bold'); doc.setFontSize(11);
-      doc.text('Observaciones / diagnóstico:', M, y);
-      y += 14;
-      doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      const obsLines = doc.splitTextToSize(obj.acciones || '-', 595 - 2*M);
-      for (const line of obsLines){
-        if (y > 770){ doc.addPage(); y = M; }
-        doc.text(line, M, y); y += 12;
-      }
-
-      // Fotos
-      if (obj.fotos && obj.fotos.length){
-        for (let i=0;i<obj.fotos.length;i++){
-          if (y > 500){ doc.addPage(); y = M; }
-          y += 10;
-          doc.setFont('helvetica','bold'); doc.setFontSize(10);
-          doc.text(`Foto ${i+1}`, M, y);
-          y += 8;
-          try { doc.addImage(obj.fotos[i], 'JPEG', M, y, 595-2*M, 260); } catch(e){}
-          y += 270;
-        }
-      }
-
-      // Firma
-      if (y > 650){ doc.addPage(); y = M; }
-      doc.setFont('helvetica','bold'); doc.setFontSize(11);
-      doc.text('Firma del cliente / conformidad', M, y);
-      y += 10;
-      doc.setDrawColor(80,100,140);
-      doc.rect(M, y, 360, 130);
-      if (obj.firma){
-        try { doc.addImage(obj.firma, 'PNG', M+10, y+10, 340, 110); } catch(e){}
-      }
-
-      // Descargar
-      const nombre = `OT_${String(obj.consecutivo).padStart(5,'0')}_${(obj.cliente||'Cliente').replace(/[^a-z0-9\-_]+/gi,'_')}.pdf`;
-      const blob = doc.output('blob');
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = nombre;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(()=>URL.revokeObjectURL(url), 1500);
-
-      // ✅ sensación de “vuelve a principal”: opcional, resetea hora/fecha y firma/fotos
-      setTimeout(()=>{
-        initFechaHora();
-        signaturePad.clear();
-        fotosDataURLs = [];
-        thumbs.innerHTML = '';
-      }, 50);
-    }
-
-    function bindPDFWhenReady(){
-      if (window.jspdf && window.jspdf.jsPDF) {
-        const btn = document.getElementById('pdf');
-        if (btn && !btn.__pdfBound){
-          btn.addEventListener('click', generarPDF);
-          btn.__pdfBound = true;
-        }
-      } else { setTimeout(bindPDFWhenReady, 400); }
-    }
-    window.addEventListener('load', bindPDFWhenReady);
-
-    /*************** Reset ***************/
-    document.getElementById('limpiarForm').addEventListener('click', ()=>{
-      setTimeout(()=>{
-        signaturePad.clear();
-        fotosDataURLs = [];
-        thumbs.innerHTML = '';
-        document.getElementById('numReporte').value = peekConsecutivo();
-        initFechaHora();
-      }, 0);
-    });
-
-    /*************** Toast ***************/
-    function toast(msg){
-      const d=document.createElement('div');
-      d.textContent=msg;
-      d.style.cssText='position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#101a35;border:1px solid #253055;padding:10px 14px;border-radius:12px;box-shadow:var(--shadow);z-index:9999;color:#ebf0ff;';
-      document.body.appendChild(d);
-      setTimeout(()=>d.remove(),2200);
-    }
-
-    /*************** Init ***************/
-    function init(){
-      resizeCanvas();
-      initFechaHora();
-      document.getElementById('numReporte').value = peekConsecutivo();
-    }
-    init();
-  </script>
-</body>
-</html>
