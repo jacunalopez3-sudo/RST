@@ -21,7 +21,9 @@
     .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
     .card h2{margin:0 0 10px;font-size:1.1rem}
     label{display:block;margin:10px 0 6px;color:var(--muted);font-size:.92rem}
-    input[type="text"],input[type="number"],input[type="date"],input[type="time"],input[type="email"],textarea,select{width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:#0f1732;color:var(--text);outline:none}
+    input[type="text"],input[type="number"],input[type="date"],input[type="time"],input[type="email"],textarea,select{
+      width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:#0f1732;color:var(--text);outline:none
+    }
     textarea{min-height:90px;resize:vertical}
     .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
@@ -32,17 +34,16 @@
     button.primary{background:#2d7bd9;border-color:#2d7bd9}
     button.success{background:#18a877;border-color:#159569}
     button.danger{background:#e74a3b;border-color:#c0392b}
+
     .thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;margin-top:8px}
     .thumbs img{width:100%;height:74px;object-fit:cover;border-radius:10px;border:1px solid var(--border)}
     canvas#sigPad{width:100%;height:170px;background:#0f1732;border:1px dashed #2c3b6a;border-radius:12px}
-    table{width:100%;border-collapse:collapse}
-    th,td{padding:10px;border-bottom:1px solid var(--border);text-align:left}
-    th{color:var(--muted);font-weight:600}
-    .right{text-align:right}
-    .nowrap{white-space:nowrap}
+
     .footer{color:var(--muted);font-size:.85rem;margin-top:8px}
+    .hidden{display:none !important;}
   </style>
 </head>
+
 <body>
   <header>
     <div class="wrap"><h1>Reportes Técnicos – Versión Simple (sin offline)</h1></div>
@@ -53,6 +54,7 @@
       <!-- Formulario -->
       <section class="card">
         <h2>Nuevo reporte</h2>
+
         <form id="reporteForm">
           <div class="grid-4">
             <div>
@@ -89,10 +91,13 @@
           </div>
 
           <h3 class="muted">Equipo atendido</h3>
-          <div class="grid-3">
+
+          <!-- CAMBIO: ahora es grid-4 y agregamos ACTIVO -->
+          <div class="grid-4">
             <div><label>Marca</label><input type="text" id="marca" required /></div>
             <div><label>Modelo</label><input type="text" id="modelo" required /></div>
             <div><label>N° de serie</label><input type="text" id="serie" required /></div>
+            <div><label>Activo</label><input type="text" id="activo" placeholder="Ej. Código interno" /></div>
           </div>
 
           <div class="grid-2">
@@ -139,39 +144,34 @@
             <div>
               <label>Logo empresa (opcional)</label>
               <input type="file" id="logo" accept="image/*" />
-              <div class="btns"><button type="button" id="fijarLogo" class="btn">Guardar logo como fijo</button></div>
+              <div class="btns">
+                <button type="button" id="fijarLogo" class="btn">Guardar logo como fijo</button>
+              </div>
             </div>
             <div>
               <label>Firma del cliente</label>
               <canvas id="sigPad"></canvas>
-              <div class="btns"><button type="button" id="limpiarFirma" class="btn">Limpiar firma</button></div>
+              <div class="btns">
+                <button type="button" id="limpiarFirma" class="btn">Limpiar firma</button>
+              </div>
             </div>
           </div>
 
           <div class="btns">
             <button type="button" class="primary" id="guardar">Guardar local</button>
             <button type="button" class="success" id="pdf">Generar PDF</button>
-            <button type="reset" class="danger">Limpiar formulario</button>
+            <button type="reset" class="danger" id="limpiarForm">Limpiar formulario</button>
           </div>
+
           <div class="footer">Consecutivo y datos en <strong>localStorage</strong>. Sin Service Worker.</div>
         </form>
       </section>
 
-      <!-- Lista -->
-      <section class="card">
-        <h2>Reportes guardados</h2>
-        <table>
-          <thead><tr><th>Reporte</th><th>Fecha</th><th>Cliente</th><th>Equipo</th><th class="right">Acciones</th></tr></thead>
-          <tbody id="tabla"></tbody>
-        </table>
-        <div class="btns">
-          <button id="exportarTodo" class="btn">Exportar JSON</button>
-          <button id="importarBtn" class="btn">Importar JSON</button>
-          <input type="file" id="importarInput" accept="application/json" style="display:none" />
-        </div>
+      <!-- CAMBIO: Eliminamos/ocultamos completamente “Reportes guardados” -->
+      <section class="card hidden" id="panelGuardados">
+        <!-- Intencionalmente oculto -->
       </section>
     </div>
-    <p class="footer">PDF: logo grande, cabecera empresa, DATOS DEL CLIENTE, ACTUACIONES/CANTIDAD, Observaciones, fotos y firma.</p>
   </main>
 
   <!-- jsPDF (UMD) con fallback -->
@@ -206,12 +206,19 @@
     const LS_KEY_CONSEC   = 'reportes_simple_consecutivo'; // arranca en 56 -> siguiente 57
     const LS_KEY_LOGO     = 'reportes_simple_logo_fijo';
 
-    function loadReportes(){ try{ return JSON.parse(localStorage.getItem(LS_KEY_REPORTES) || '[]'); }catch(e){ return []; } }
-    function saveReportes(arr){ localStorage.setItem(LS_KEY_REPORTES, JSON.stringify(arr)); }
+    function loadReportes(){
+      try{ return JSON.parse(localStorage.getItem(LS_KEY_REPORTES) || '[]'); }
+      catch(e){ return []; }
+    }
+    function saveReportes(arr){
+      try{ localStorage.setItem(LS_KEY_REPORTES, JSON.stringify(arr)); }
+      catch(e){ alert('No se pudo guardar. Revisa espacio/privacidad del navegador.'); }
+    }
 
     function getNextConsecutivo(){
       let n = parseInt(localStorage.getItem(LS_KEY_CONSEC) || '56', 10);
-      const next = n + 1; localStorage.setItem(LS_KEY_CONSEC, String(next));
+      const next = n + 1;
+      localStorage.setItem(LS_KEY_CONSEC, String(next));
       return next;
     }
     function peekConsecutivo(){
@@ -220,11 +227,15 @@
     }
 
     function getLogoFijo(){ return localStorage.getItem(LS_KEY_LOGO); }
-    function setLogoFijo(dataURL){ localStorage.setItem(LS_KEY_LOGO, dataURL); }
+    function setLogoFijo(dataURL){
+      try{ localStorage.setItem(LS_KEY_LOGO, dataURL); }
+      catch(e){ alert('No se pudo guardar el logo.'); }
+    }
 
     /*************** Firma ***************/
     const canvas = document.getElementById('sigPad');
     const signaturePad = new window.SignaturePad(canvas, { backgroundColor: 'rgba(0,0,0,0)' });
+
     function resizeCanvas(){
       const ratio = Math.max(window.devicePixelRatio || 1, 1);
       canvas.width = canvas.offsetWidth * ratio;
@@ -239,9 +250,280 @@
     /*************** Logo ***************/
     const logoInput = document.getElementById('logo');
     let logoDataURL = getLogoFijo() || null;
+
     logoInput.addEventListener('change', async (ev) => {
       const f = ev.target.files?.[0];
       logoDataURL = f ? await fileToDataURL(f) : null;
     });
+
     document.getElementById('fijarLogo').addEventListener('click', () => {
-      if (!logoDataURL) { alert('Carga un logo primero.
+      if (!logoDataURL) { alert('Carga un logo primero.'); return; }
+      setLogoFijo(logoDataURL);
+      toast('Logo fijo guardado');
+    });
+
+    /*************** Fotos ***************/
+    const fotosInput = document.getElementById('fotos');
+    const thumbs = document.getElementById('thumbs');
+    let fotosDataURLs = [];
+
+    fotosInput.addEventListener('change', async (ev) => {
+      const files = Array.from(ev.target.files || []);
+      fotosDataURLs = [];
+      thumbs.innerHTML = '';
+      for (const f of files) {
+        const url = await fileToDataURL(f);
+        fotosDataURLs.push(url);
+        const img = document.createElement('img');
+        img.src = url;
+        thumbs.appendChild(img);
+      }
+    });
+
+    function fileToDataURL(file){
+      return new Promise((res,rej)=>{
+        const r = new FileReader();
+        r.onload = ()=>res(r.result);
+        r.onerror = rej;
+        r.readAsDataURL(file);
+      });
+    }
+
+    /*************** Utilidades ***************/
+    function pad2(n){ return (n<10?'0':'') + n; }
+    function initFechaHora(){
+      const d = new Date();
+      document.getElementById('fecha').value = d.toISOString().slice(0,10);
+      const hhmm = pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+      document.getElementById('horaIni').value = hhmm;
+      document.getElementById('horaFin').value = hhmm;
+    }
+    function calcDuracion(h1, h2){
+      const [a,b] = h1.split(':').map(Number), [c,d] = h2.split(':').map(Number);
+      let m1 = a*60+b, m2 = c*60+d; if (m2 < m1) m2 += 24*60;
+      const dif = m2 - m1;
+      return Math.floor(dif/60)+':'+pad2(dif%60);
+    }
+
+    /*************** Form data ***************/
+    function formDataToObj(asignarConsecutivo){
+      const get = id => document.getElementById(id).value.trim();
+      const firma = signaturePad.isEmpty() ? null : signaturePad.toDataURL('image/png');
+      const id = `${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
+      const consecutivo = asignarConsecutivo ? getNextConsecutivo()
+                        : parseInt(document.getElementById('numReporte').value || peekConsecutivo(), 10);
+      const dur = calcDuracion(get('horaIni'), get('horaFin'));
+
+      return {
+        id, consecutivo,
+        fecha:get('fecha'), horaIni:get('horaIni'), horaFin:get('horaFin'), duracion:dur,
+        cliente:get('cliente'), responsable:get('responsable'), correo:get('correo'),
+        marca:get('marca'), modelo:get('modelo'), serie:get('serie'),
+        activo:get('activo'),                  // ✅ NUEVO CAMPO
+        actuacion:get('actuacion'), cantidad:get('cantidad'),
+        falla:get('falla'), acciones:get('acciones'),
+        repuestos:get('repuestos'), horas:get('horas'), estado:get('estado'),
+        fotos:fotosDataURLs,
+        logo:(logoDataURL || getLogoFijo()),
+        firma
+      };
+    }
+
+    /*************** Guardar local ***************/
+    function guardarLocal(){
+      const obj = formDataToObj(true);
+      const arr = loadReportes();
+      arr.push(obj);
+      saveReportes(arr);
+
+      // mostrar siguiente consecutivo
+      document.getElementById('numReporte').value = peekConsecutivo();
+      toast(`Guardado reporte #${obj.consecutivo}`);
+    }
+    document.getElementById('guardar').addEventListener('click', guardarLocal);
+
+    /*************** PDF ***************/
+    function generarPDF(){
+      const obj = formDataToObj(false);
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit:'pt', format:'a4' });
+      const M = 36;
+      let y = M;
+
+      // Logo
+      const logo = obj.logo;
+      if (logo){
+        try { doc.addImage(logo, 'PNG', M, y, 150, 75); } catch(e){}
+      }
+
+      const rightX = M + 170;
+      doc.setFont('helvetica','bold'); doc.setFontSize(12);
+      doc.text(HEADER.company, rightX, y+14);
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      doc.text(HEADER.legalId, rightX, y+30);
+      doc.text(HEADER.address, rightX, y+46);
+      doc.text(HEADER.email, rightX, y+62);
+      doc.text(HEADER.phone, rightX, y+78);
+      if (HEADER.technician) doc.text(HEADER.technician, rightX, y+94);
+
+      y += 120;
+      doc.setDrawColor(120,140,170);
+      doc.line(M, y, 595-M, y);
+
+      // Encabezado OT
+      y += 22;
+      doc.setFont('helvetica','bold'); doc.setFontSize(12);
+      doc.text(`Num. Orden de trabajo: ${String(obj.consecutivo).padStart(5,'0')}`, M, y);
+
+      y += 18;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      doc.text(`Fecha: ${obj.fecha}`, M, y);
+      doc.text(`Hora Inicio: ${obj.horaIni}`, M+180, y);
+      doc.text(`Hora Fin: ${obj.horaFin}`, M+340, y);
+      doc.text(`Tiempo: ${obj.duracion}`, 595-M, y, { align:'right' });
+
+      // Datos cliente
+      y += 22;
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text('DATOS DEL CLIENTE', M, y);
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      y += 16; doc.text(`Cliente: ${obj.cliente || '-'}`, M, y);
+      y += 16; doc.text(`Responsable: ${obj.responsable || '-'}`, M, y);
+      if (obj.correo) { y += 16; doc.text(`Correo: ${obj.correo}`, M, y); }
+
+      // Equipo atendido (incluye ACTIVO)
+      y += 18;
+      doc.setDrawColor(120,140,170);
+      doc.line(M, y, 595-M, y);
+
+      y += 18;
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text('EQUIPO ATENDIDO', M, y);
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      y += 16; doc.text(`Marca: ${obj.marca || '-'}`, M, y);
+      y += 16; doc.text(`Modelo: ${obj.modelo || '-'}`, M, y);
+      y += 16; doc.text(`Serie: ${obj.serie || '-'}`, M, y);
+      y += 16; doc.text(`Activo: ${obj.activo || '-'}`, M, y);   // ✅ NUEVO EN PDF
+
+      // Actuación / cantidad
+      y += 18;
+      doc.setDrawColor(120,140,170);
+      doc.line(M, y, 595-M, y);
+
+      y += 18;
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text('ACTUACIONES', M, y);
+      doc.text('CANTIDAD', 595-M, y, { align:'right' });
+      y += 14;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      doc.text(String(obj.actuacion || '-'), M, y);
+      doc.text(String(obj.cantidad || '1'), 595-M, y, { align:'right' });
+
+      // Falla
+      y += 18;
+      doc.setDrawColor(120,140,170);
+      doc.line(M, y, 595-M, y);
+
+      y += 18;
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text('Descripción de falla / solicitud:', M, y);
+      y += 14;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      const fallaLines = doc.splitTextToSize(obj.falla || '-', 595 - 2*M);
+      for (const line of fallaLines){
+        if (y > 770){ doc.addPage(); y = M; }
+        doc.text(line, M, y); y += 12;
+      }
+
+      // Observaciones
+      y += 8;
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text('Observaciones / diagnóstico:', M, y);
+      y += 14;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      const obsLines = doc.splitTextToSize(obj.acciones || '-', 595 - 2*M);
+      for (const line of obsLines){
+        if (y > 770){ doc.addPage(); y = M; }
+        doc.text(line, M, y); y += 12;
+      }
+
+      // Fotos (si caben; si no, nuevas páginas)
+      if (obj.fotos && obj.fotos.length){
+        for (let i=0;i<obj.fotos.length;i++){
+          if (y > 500){ doc.addPage(); y = M; }
+          y += 10;
+          doc.setFont('helvetica','bold'); doc.setFontSize(10);
+          doc.text(`Foto ${i+1}`, M, y);
+          y += 8;
+          try {
+            doc.addImage(obj.fotos[i], 'JPEG', M, y, 595-2*M, 260);
+          } catch(e){}
+          y += 270;
+        }
+      }
+
+      // Firma
+      if (y > 650){ doc.addPage(); y = M; }
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text('Firma del cliente / conformidad', M, y);
+      y += 10;
+      doc.setDrawColor(80,100,140);
+      doc.rect(M, y, 360, 130);
+      if (obj.firma){
+        try { doc.addImage(obj.firma, 'PNG', M+10, y+10, 340, 110); } catch(e){}
+      }
+
+      // Guardado iOS/Android
+      const nombre = `OT_${String(obj.consecutivo).padStart(5,'0')}_${(obj.cliente||'Cliente').replace(/[^a-z0-9\-_]+/gi,'_')}.pdf`;
+      const blob = doc.output('blob');
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nombre;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 1500);
+    }
+
+    function bindPDFWhenReady(){
+      if (window.jspdf && window.jspdf.jsPDF) {
+        const btn = document.getElementById('pdf');
+        if (btn && !btn.__pdfBound){
+          btn.addEventListener('click', generarPDF);
+          btn.__pdfBound = true;
+        }
+      } else { setTimeout(bindPDFWhenReady, 400); }
+    }
+    window.addEventListener('load', bindPDFWhenReady);
+
+    /*************** Reset ***************/
+    document.getElementById('limpiarForm').addEventListener('click', ()=>{
+      setTimeout(()=>{
+        signaturePad.clear();
+        fotosDataURLs = [];
+        thumbs.innerHTML = '';
+        document.getElementById('numReporte').value = peekConsecutivo();
+        initFechaHora();
+      }, 0);
+    });
+
+    /*************** Toast ***************/
+    function toast(msg){
+      const d=document.createElement('div');
+      d.textContent=msg;
+      d.style.cssText='position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#101a35;border:1px solid #253055;padding:10px 14px;border-radius:12px;box-shadow:var(--shadow);z-index:9999;color:#ebf0ff;';
+      document.body.appendChild(d);
+      setTimeout(()=>d.remove(),2200);
+    }
+
+    /*************** Init ***************/
+    function init(){
+      resizeCanvas();
+      initFechaHora();
+      document.getElementById('numReporte').value = peekConsecutivo();
+    }
+    init();
+  </script>
+</body>
+</html>
