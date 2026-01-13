@@ -31,9 +31,8 @@
       border-bottom:1px solid var(--border)
     }
 
-    /* ✅ FULL WIDTH */
     .wrap{
-      max-width:1600px;       /* antes 1200 */
+      max-width:1600px;
       margin:0 auto;
       padding:20px;
     }
@@ -41,7 +40,6 @@
     h1{margin:0;font-size:1.55rem;font-weight:800}
     .row{display:grid;grid-template-columns:1fr;gap:18px}
 
-    /* ✅ Siempre 1 columna (formulario ocupa todo); ya no “deja espacio” */
     @media (min-width:900px){
       .row{grid-template-columns:1fr;}
     }
@@ -51,7 +49,7 @@
       border:1px solid var(--border);
       border-radius:var(--radius);
       box-shadow:var(--shadow);
-      padding:20px;           /* más aire */
+      padding:20px;
     }
 
     .card h2{margin:0 0 12px;font-size:1.25rem}
@@ -60,24 +58,23 @@
       display:block;
       margin:12px 0 8px;
       color:var(--muted);
-      font-size:1rem;         /* más grande */
+      font-size:1rem;
       font-weight:600;
     }
 
     input[type="text"],input[type="number"],input[type="date"],input[type="time"],input[type="email"],textarea,select{
       width:100%;
-      padding:14px 14px;      /* más grande */
+      padding:14px 14px;
       border-radius:14px;
       border:1px solid var(--border);
       background:#0f1732;
       color:var(--text);
       outline:none;
-      font-size:1.05rem;      /* más grande */
+      font-size:1.05rem;
     }
 
     textarea{min-height:130px;resize:vertical}
 
-    /* ✅ Grids responsivos: en móvil bajan de columnas */
     .grid-2{display:grid;grid-template-columns:1fr;gap:14px}
     .grid-3{display:grid;grid-template-columns:1fr;gap:14px}
     .grid-4{display:grid;grid-template-columns:1fr;gap:14px}
@@ -97,7 +94,7 @@
       background:#101a35;
       color:var(--text);
       border-radius:16px;
-      padding:12px 16px;       /* botones más grandes */
+      padding:12px 16px;
       font-weight:700;
       cursor:pointer;
       box-shadow:var(--shadow);
@@ -121,10 +118,9 @@
       border:1px solid var(--border)
     }
 
-    /* ✅ Firma más grande */
     canvas#sigPad{
       width:100%;
-      height:220px;            /* antes 170 */
+      height:220px;
       background:#0f1732;
       border:1px dashed #2c3b6a;
       border-radius:14px
@@ -153,3 +149,419 @@
             </div>
             <div>
               <label>Fecha</label>
+              <input type="date" id="fecha" required />
+            </div>
+            <div>
+              <label>Hora inicio</label>
+              <input type="time" id="horaIni" required />
+            </div>
+            <div>
+              <label>Hora fin</label>
+              <input type="time" id="horaFin" required />
+            </div>
+          </div>
+
+          <div class="grid-3">
+            <div>
+              <label>Cliente / Clínica / Hospital</label>
+              <input type="text" id="cliente" required placeholder="Ej. Clínica Santa María" />
+            </div>
+            <div>
+              <label>Responsable en sitio</label>
+              <input type="text" id="responsable" required />
+            </div>
+            <div>
+              <label>Correo del cliente (para enviar PDF)</label>
+              <input type="email" id="correo" placeholder="cliente@ejemplo.com" />
+            </div>
+          </div>
+
+          <h3 class="muted">Equipo atendido</h3>
+
+          <div class="grid-4">
+            <div><label>Marca</label><input type="text" id="marca" required /></div>
+            <div><label>Modelo</label><input type="text" id="modelo" required /></div>
+            <div><label>N° de serie</label><input type="text" id="serie" required /></div>
+            <div><label>Activo</label><input type="text" id="activo" placeholder="Ej. Código interno" /></div>
+          </div>
+
+          <div class="grid-2">
+            <div>
+              <label>Actuación</label>
+              <select id="actuacion">
+                <option>Mtto Preventivo</option>
+                <option>Mtto Correctivo</option>
+                <option>Instalación de Repuesto</option>
+                <option>Otro</option>
+              </select>
+            </div>
+            <div>
+              <label>Cantidad</label>
+              <input type="number" id="cantidad" step="0.1" min="0" value="1" />
+            </div>
+          </div>
+
+          <label>Observaciones / diagnóstico</label>
+          <textarea id="acciones" required></textarea>
+
+          <div class="grid-3">
+            <div><label>Repuestos utilizados</label><input type="text" id="repuestos" placeholder="Separar por coma" /></div>
+            <div><label>Horas trabajadas</label><input type="number" id="horas" step="0.1" min="0" value="1" /></div>
+            <div>
+              <label>Estado final</label>
+              <select id="estado">
+                <option>Operativo</option>
+                <option>Operativo con observaciones</option>
+                <option>En espera de repuesto</option>
+                <option>No operativo</option>
+              </select>
+            </div>
+          </div>
+
+          <label>Fotografías (evidencia)</label>
+          <!-- ✅ CAMBIO: quitamos capture para que salga Cámara / Archivos / Fototeca -->
+          <input type="file" id="fotos" accept="image/*" multiple />
+          <div id="thumbs" class="thumbs"></div>
+
+          <div class="grid-2">
+            <div>
+              <label>Logo empresa (opcional)</label>
+              <input type="file" id="logo" accept="image/*" />
+              <div class="btns">
+                <button type="button" id="fijarLogo" class="btn">Guardar logo como fijo</button>
+              </div>
+            </div>
+            <div>
+              <label>Firma del cliente</label>
+              <canvas id="sigPad"></canvas>
+              <div class="btns">
+                <button type="button" id="limpiarFirma" class="btn">Limpiar firma</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="btns">
+            <button type="button" class="primary" id="guardar">Guardar local</button>
+            <button type="button" class="success" id="pdf">Generar PDF</button>
+            <button type="reset" class="danger" id="limpiarForm">Limpiar formulario</button>
+          </div>
+
+          <div class="footer">Consecutivo y datos en <strong>localStorage</strong>. Sin Service Worker.</div>
+        </form>
+      </section>
+
+      <section class="card hidden" id="panelGuardados"></section>
+    </div>
+  </main>
+
+  <!-- jsPDF (UMD) con fallback -->
+  <script id="jspdf-cdn"
+          src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"
+          onload="window.__JSPDF_OK=true"></script>
+  <script>
+    if (!window.__JSPDF_OK) {
+      var s = document.createElement('script');
+      s.src = 'https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js';
+      s.onload = function(){ window.__JSPDF_OK = true; };
+      document.head.appendChild(s);
+    }
+  </script>
+
+  <!-- Signature Pad (UMD) -->
+  <script src="https://cdn.jsdelivr.net/npm/signature_pad@5.0.10/dist/signature_pad.umd.min.js"></script>
+
+  <script>
+    const HEADER = {
+      company:   'Bennu Healthcare Solutions',
+      legalId:   '3-101804878',
+      address:   'Sabana Sur, Mata Redonda, Centro Comercial del Sur',
+      email:     'jacuna@bennucr.com',
+      phone:     'Teléfono: 83485676',
+      technician:'Técnico: Ing. Juan Carlos Acuña Lopez'
+    };
+
+    const LS_KEY_REPORTES = 'reportes_simple_list';
+    const LS_KEY_CONSEC   = 'reportes_simple_consecutivo';
+    const LS_KEY_LOGO     = 'reportes_simple_logo_fijo';
+
+    function loadReportes(){ try{ return JSON.parse(localStorage.getItem(LS_KEY_REPORTES) || '[]'); }catch(e){ return []; } }
+    function saveReportes(arr){ try{ localStorage.setItem(LS_KEY_REPORTES, JSON.stringify(arr)); }catch(e){ alert('No se pudo guardar.'); } }
+
+    function peekConsecutivo(){
+      let lastUsed = parseInt(localStorage.getItem(LS_KEY_CONSEC) || '56', 10);
+      return lastUsed + 1;
+    }
+    function commitConsecutivoUsed(used){
+      localStorage.setItem(LS_KEY_CONSEC, String(used));
+    }
+
+    function getLogoFijo(){ return localStorage.getItem(LS_KEY_LOGO); }
+    function setLogoFijo(dataURL){ try{ localStorage.setItem(LS_KEY_LOGO, dataURL); }catch(e){ alert('No se pudo guardar el logo.'); } }
+
+    const canvas = document.getElementById('sigPad');
+    const signaturePad = new window.SignaturePad(canvas, { backgroundColor: 'rgba(0,0,0,0)' });
+
+    function resizeCanvas(){
+      const ratio = Math.max(window.devicePixelRatio || 1, 1);
+      canvas.width = canvas.offsetWidth * ratio;
+      canvas.height = canvas.offsetHeight * ratio;
+      canvas.getContext('2d').setTransform(ratio,0,0,ratio,0,0);
+      signaturePad.clear();
+    }
+    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('orientationchange', resizeCanvas);
+    document.getElementById('limpiarFirma').addEventListener('click', () => signaturePad.clear());
+
+    const logoInput = document.getElementById('logo');
+    let logoDataURL = getLogoFijo() || null;
+
+    logoInput.addEventListener('change', async (ev) => {
+      const f = ev.target.files?.[0];
+      logoDataURL = f ? await fileToDataURL(f) : null;
+    });
+
+    document.getElementById('fijarLogo').addEventListener('click', () => {
+      if (!logoDataURL) { alert('Carga un logo primero.'); return; }
+      setLogoFijo(logoDataURL);
+      toast('Logo fijo guardado');
+    });
+
+    const fotosInput = document.getElementById('fotos');
+    const thumbs = document.getElementById('thumbs');
+    let fotosDataURLs = [];
+
+    fotosInput.addEventListener('change', async (ev) => {
+      const files = Array.from(ev.target.files || []);
+      fotosDataURLs = [];
+      thumbs.innerHTML = '';
+      for (const f of files) {
+        const url = await fileToDataURL(f);
+        fotosDataURLs.push(url);
+        const img = document.createElement('img');
+        img.src = url;
+        thumbs.appendChild(img);
+      }
+    });
+
+    function fileToDataURL(file){
+      return new Promise((res,rej)=>{
+        const r = new FileReader();
+        r.onload = ()=>res(r.result);
+        r.onerror = rej;
+        r.readAsDataURL(file);
+      });
+    }
+
+    function pad2(n){ return (n<10?'0':'') + n; }
+    function initFechaHora(){
+      const d = new Date();
+      document.getElementById('fecha').value = d.toISOString().slice(0,10);
+      const hhmm = pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+      document.getElementById('horaIni').value = hhmm;
+      document.getElementById('horaFin').value = hhmm;
+    }
+    function calcDuracion(h1, h2){
+      const [a,b] = h1.split(':').map(Number), [c,d] = h2.split(':').map(Number);
+      let m1 = a*60+b, m2 = c*60+d; if (m2 < m1) m2 += 24*60;
+      const dif = m2 - m1;
+      return Math.floor(dif/60)+':'+pad2(dif%60);
+    }
+
+    function formDataToObj(consecutivoForzado){
+      const get = id => document.getElementById(id).value.trim();
+      const firma = signaturePad.isEmpty() ? null : signaturePad.toDataURL('image/png');
+      const id = `${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
+
+      const consecutivo = Number(consecutivoForzado || document.getElementById('numReporte').value || peekConsecutivo());
+      const dur = calcDuracion(get('horaIni'), get('horaFin'));
+
+      return {
+        id, consecutivo,
+        fecha:get('fecha'), horaIni:get('horaIni'), horaFin:get('horaFin'), duracion:dur,
+        cliente:get('cliente'), responsable:get('responsable'), correo:get('correo'),
+        marca:get('marca'), modelo:get('modelo'), serie:get('serie'),
+        activo:get('activo'),
+        actuacion:get('actuacion'), cantidad:get('cantidad'),
+        acciones:get('acciones'),
+        repuestos:get('repuestos'), horas:get('horas'), estado:get('estado'),
+        fotos:fotosDataURLs,
+        logo:(logoDataURL || getLogoFijo()),
+        firma
+      };
+    }
+
+    function guardarLocal(){
+      const used = Number(document.getElementById('numReporte').value || peekConsecutivo());
+      const obj = formDataToObj(used);
+      const arr = loadReportes();
+      arr.push(obj);
+      saveReportes(arr);
+      toast(`Guardado reporte #${obj.consecutivo}`);
+    }
+    document.getElementById('guardar').addEventListener('click', guardarLocal);
+
+    function generarPDF(){
+      const used = Number(document.getElementById('numReporte').value || peekConsecutivo());
+      const obj = formDataToObj(used);
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit:'pt', format:'a4' });
+      const M = 36;
+      let y = M;
+
+      if (obj.logo){
+        try { doc.addImage(obj.logo, 'PNG', M, y, 150, 75); } catch(e){}
+      }
+
+      const rightX = M + 170;
+      doc.setFont('helvetica','bold'); doc.setFontSize(12);
+      doc.text(HEADER.company, rightX, y+14);
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      doc.text(HEADER.legalId, rightX, y+30);
+      doc.text(HEADER.address, rightX, y+46);
+      doc.text(HEADER.email, rightX, y+62);
+      doc.text(HEADER.phone, rightX, y+78);
+      if (HEADER.technician) doc.text(HEADER.technician, rightX, y+94);
+
+      y += 120;
+      doc.setDrawColor(120,140,170);
+      doc.line(M, y, 595-M, y);
+
+      y += 22;
+      doc.setFont('helvetica','bold'); doc.setFontSize(12);
+      doc.text(`Num. Orden de trabajo: ${String(obj.consecutivo).padStart(5,'0')}`, M, y);
+
+      y += 18;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      doc.text(`Fecha: ${obj.fecha}`, M, y);
+      doc.text(`Hora Inicio: ${obj.horaIni}`, M+180, y);
+      doc.text(`Hora Fin: ${obj.horaFin}`, M+340, y);
+      doc.text(`Tiempo: ${obj.duracion}`, 595-M, y, { align:'right' });
+
+      y += 22;
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text('DATOS DEL CLIENTE', M, y);
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      y += 16; doc.text(`Cliente: ${obj.cliente || '-'}`, M, y);
+      y += 16; doc.text(`Responsable: ${obj.responsable || '-'}`, M, y);
+      if (obj.correo) { y += 16; doc.text(`Correo: ${obj.correo}`, M, y); }
+
+      y += 18;
+      doc.setDrawColor(120,140,170);
+      doc.line(M, y, 595-M, y);
+
+      y += 18;
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text('EQUIPO ATENDIDO', M, y);
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      y += 16; doc.text(`Marca: ${obj.marca || '-'}`, M, y);
+      y += 16; doc.text(`Modelo: ${obj.modelo || '-'}`, M, y);
+      y += 16; doc.text(`Serie: ${obj.serie || '-'}`, M, y);
+      y += 16; doc.text(`Activo: ${obj.activo || '-'}`, M, y);
+
+      y += 18;
+      doc.setDrawColor(120,140,170);
+      doc.line(M, y, 595-M, y);
+
+      y += 18;
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text('ACTUACIONES', M, y);
+      doc.text('CANTIDAD', 595-M, y, { align:'right' });
+      y += 14;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      doc.text(String(obj.actuacion || '-'), M, y);
+      doc.text(String(obj.cantidad || '1'), 595-M, y, { align:'right' });
+
+      y += 18;
+      doc.setDrawColor(120,140,170);
+      doc.line(M, y, 595-M, y);
+
+      y += 18;
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text('Observaciones / diagnóstico:', M, y);
+      y += 14;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      const obsLines = doc.splitTextToSize(obj.acciones || '-', 595 - 2*M);
+      for (const line of obsLines){
+        if (y > 770){ doc.addPage(); y = M; }
+        doc.text(line, M, y); y += 12;
+      }
+
+      if (obj.fotos && obj.fotos.length){
+        for (let i=0;i<obj.fotos.length;i++){
+          if (y > 500){ doc.addPage(); y = M; }
+          y += 10;
+          doc.setFont('helvetica','bold'); doc.setFontSize(10);
+          doc.text(`Foto ${i+1}`, M, y);
+          y += 8;
+          try { doc.addImage(obj.fotos[i], 'JPEG', M, y, 595-2*M, 260); } catch(e){}
+          y += 270;
+        }
+      }
+
+      if (y > 650){ doc.addPage(); y = M; }
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text('Firma del cliente / conformidad', M, y);
+      y += 10;
+      doc.setDrawColor(80,100,140);
+      doc.rect(M, y, 360, 130);
+      if (obj.firma){
+        try { doc.addImage(obj.firma, 'PNG', M+10, y+10, 340, 110); } catch(e){}
+      }
+
+      const nombre = `OT_${String(obj.consecutivo).padStart(5,'0')}_${(obj.marca||'Equipo')}_${(obj.modelo||'')}.pdf`
+        .replace(/[^a-z0-9\-_\.]+/gi,'_');
+
+      const blob = doc.output('blob');
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nombre;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 1500);
+
+      commitConsecutivoUsed(used);
+      document.getElementById('numReporte').value = peekConsecutivo();
+      toast(`PDF generado. Siguiente: #${document.getElementById('numReporte').value}`);
+    }
+
+    function bindPDFWhenReady(){
+      if (window.jspdf && window.jspdf.jsPDF) {
+        const btn = document.getElementById('pdf');
+        if (btn && !btn.__pdfBound){
+          btn.addEventListener('click', generarPDF);
+          btn.__pdfBound = true;
+        }
+      } else { setTimeout(bindPDFWhenReady, 400); }
+    }
+    window.addEventListener('load', bindPDFWhenReady);
+
+    document.getElementById('limpiarForm').addEventListener('click', ()=>{
+      setTimeout(()=>{
+        signaturePad.clear();
+        fotosDataURLs = [];
+        thumbs.innerHTML = '';
+        document.getElementById('numReporte').value = peekConsecutivo();
+        initFechaHora();
+      }, 0);
+    });
+
+    function toast(msg){
+      const d=document.createElement('div');
+      d.textContent=msg;
+      d.style.cssText='position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#101a35;border:1px solid #253055;padding:10px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:9999;color:#ebf0ff;';
+      document.body.appendChild(d);
+      setTimeout(()=>d.remove(),2200);
+    }
+
+    function init(){
+      resizeCanvas();
+      initFechaHora();
+      document.getElementById('numReporte').value = peekConsecutivo();
+    }
+    init();
+  </script>
+</body>
+</html>
