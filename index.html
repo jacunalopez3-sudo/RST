@@ -91,11 +91,11 @@
         <h2>Nuevo reporte</h2>
 
         <form id="reporteForm">
-          <!-- ✅ Encabezado empresa (aquí va el menú de ingenieros) -->
+          <!-- Encabezado empresa (menú de ingenieros) -->
           <div class="subhead">Datos empresa (BHS)</div>
           <div class="grid-3">
             <div>
-              <label>Ingeniería (BHS)</label>
+              <label>Ingeniería:</label>
               <select id="tecnicoBHS" required>
                 <option value="" selected disabled>Seleccionar...</option>
                 <option>Ing. Juan Carlos A</option>
@@ -138,7 +138,6 @@
               <input type="text" id="cliente" required />
             </div>
 
-            <!-- ✅ Esto es del cliente, texto libre -->
             <div>
               <label>Responsable en sitio (cliente)</label>
               <input type="text" id="responsable" required placeholder="Nombre y apellido" />
@@ -243,7 +242,6 @@
       company:   'Bennu Healthcare Solutions',
       legalId:   '3-101804878',
       address:   'Sabana Sur, Mata Redonda, Centro Comercial del Sur',
-      // email/phone/technician salen del formulario para que el menú sea editable
     };
 
     const DEFAULT_LOGO_URL = './logo.png';
@@ -426,8 +424,8 @@
       doc.text(HEADER.legalId, rightX, y+34);
       doc.text(HEADER.address, rightX, y+50);
 
-      // ✅ Encabezado con técnico (BHS) y contactos
-      doc.text(`Técnico: ${obj.tecnicoBHS || '-'}`, rightX, y+66);
+      // ✅ Cambio solicitado: "Ingeniería:" en el PDF
+      doc.text(`Ingeniería: ${obj.tecnicoBHS || '-'}`, rightX, y+66);
       doc.text(`Email: ${obj.emailBHS || '-'}`, rightX, y+82);
       doc.text(`Tel: ${obj.phoneBHS || '-'}`, rightX, y+98);
 
@@ -515,7 +513,6 @@
       initFechaHora();
       await ensureDefaultLogoLoaded();
       document.getElementById('numReporte').value = peekNext();
-      // preselección por comodidad (puedes quitarla si no quieres)
       document.getElementById('tecnicoBHS').value = 'Ing. Juan Carlos A';
     }
     init();
