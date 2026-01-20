@@ -64,15 +64,15 @@
     }
     button.success{background:#18a877;border-color:#159569}
     button.danger{background:#e74a3b;border-color:#c0392b}
+    canvas#sigPad{
+      width:100%;height:220px;background:#0f1732;border:1px dashed #2c3b6a;border-radius:14px
+    }
     .thumbs{
       display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));
       gap:10px;margin-top:10px
     }
     .thumbs img{
       width:100%;height:100px;object-fit:cover;border-radius:12px;border:1px solid var(--border)
-    }
-    canvas#sigPad{
-      width:100%;height:220px;background:#0f1732;border:1px dashed #2c3b6a;border-radius:14px
     }
     .footer{color:var(--muted);font-size:.95rem;margin-top:10px}
     .hidden{display:none !important;}
@@ -115,10 +115,17 @@
               <label>Cliente / Clínica / Hospital</label>
               <input type="text" id="cliente" required />
             </div>
+
+            <!-- ✅ Responsable como menú -->
             <div>
               <label>Responsable en sitio</label>
-              <input type="text" id="responsable" required />
+              <select id="responsable" required>
+                <option value="" selected disabled>Seleccionar...</option>
+                <option>Ing. Juan Carlos A</option>
+                <option>Ing. Leonardo Chacón C</option>
+              </select>
             </div>
+
             <div>
               <label>Correo del cliente (para enviar PDF)</label>
               <input type="email" id="correo" placeholder="cliente@ejemplo.com" />
@@ -175,11 +182,20 @@
           <input type="file" id="fotosCamara" accept="image/*" capture="environment" multiple class="hidden" />
           <div id="thumbs" class="thumbs"></div>
 
+          <!-- ✅ LOGO seleccionable + fijo -->
           <div class="grid-2">
             <div>
-              <label>Logo empresa</label>
-              <div class="footer">Se carga automáticamente desde <strong>logo.png</strong>.</div>
+              <label>Logo de empresa</label>
+              <input type="file" id="logoInput" accept="image/*" />
+              <div class="btns">
+                <button type="button" class="btn" id="btnFijarLogo">Fijar logo</button>
+                <button type="button" class="btn danger" id="btnRestaurarLogo">Restaurar logo por defecto</button>
+              </div>
+              <div class="footer">
+                Si no fijas uno, se usa el logo por defecto del repo: <strong>logo.png</strong>.
+              </div>
             </div>
+
             <div>
               <label>Firma del cliente</label>
               <canvas id="sigPad"></canvas>
@@ -194,7 +210,7 @@
             <button type="reset" class="danger" id="limpiarForm">Limpiar formulario</button>
           </div>
 
-          <div class="footer">Consecutivo solo se actualiza al generar PDF. Inicio en <strong>#95</strong>.</div>
+          <div class="footer">Consecutivo inicia en <strong>#95</strong> y solo se actualiza al generar PDF.</div>
         </form>
       </section>
     </div>
@@ -202,8 +218,7 @@
 
   <!-- jsPDF (UMD) -->
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-
-  <!-- Signature Pad (UMD) -->
+  <!-- Signature Pad -->
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@5.0.10/dist/signature_pad.umd.min.js"></script>
 
   <script>
@@ -217,31 +232,25 @@
     };
 
     const DEFAULT_LOGO_URL = './logo.png';
-
-    // ✅ Arranque solicitado
     const CONSEC_START = 95;
 
-    const LS_KEY_CONSEC = 'reportes_simple_consecutivo_last_used'; // guarda "último usado"
+    const LS_KEY_CONSEC = 'reportes_simple_consecutivo_last_used';
     const LS_KEY_LOGO   = 'reportes_simple_logo_fijo';
 
-    /*************** Consecutivo (NO se modifica al abrir) ***************/
+    /*************** Consecutivo ***************/
     function getLastUsed(){
       const raw = localStorage.getItem(LS_KEY_CONSEC);
-      if (raw === null || raw === undefined || raw === '') return (CONSEC_START - 1); // si no existe: último usado = 94
+      if (!raw) return (CONSEC_START - 1);
       const n = parseInt(raw, 10);
       return Number.isFinite(n) ? n : (CONSEC_START - 1);
     }
-    function peekNext(){
-      return getLastUsed() + 1; // solo preview
-    }
-    function commitUsed(used){
-      // ✅ SOLO se llama al generar PDF
-      localStorage.setItem(LS_KEY_CONSEC, String(used));
-    }
+    function peekNext(){ return getLastUsed() + 1; }   // preview
+    function commitUsed(used){ localStorage.setItem(LS_KEY_CONSEC, String(used)); } // solo PDF
 
-    /*************** Logo fijo automático ***************/
+    /*************** Logo fijo ***************/
     function getLogoFijo(){ return localStorage.getItem(LS_KEY_LOGO); }
     function setLogoFijo(dataURL){ localStorage.setItem(LS_KEY_LOGO, dataURL); }
+    function clearLogoFijo(){ localStorage.removeItem(LS_KEY_LOGO); }
 
     async function fileOrBlobToDataURL(fileOrBlob){
       return new Promise((res,rej)=>{
@@ -265,6 +274,32 @@
       }
     }
 
+    // Selección de logo desde fototeca
+    const logoInput = document.getElementById('logoInput');
+    let logoSeleccionado = null;
+
+    logoInput.addEventListener('change', async (ev) => {
+      const f = ev.target.files?.[0];
+      if (!f) { logoSeleccionado = null; return; }
+      logoSeleccionado = await fileOrBlobToDataURL(f);
+      toast('Logo cargado. Presiona "Fijar logo" para guardarlo.');
+    });
+
+    document.getElementById('btnFijarLogo').addEventListener('click', async () => {
+      if (!logoSeleccionado) {
+        alert('Primero selecciona un logo.');
+        return;
+      }
+      setLogoFijo(logoSeleccionado);
+      toast('Logo fijado ✅');
+    });
+
+    document.getElementById('btnRestaurarLogo').addEventListener('click', async () => {
+      clearLogoFijo();
+      await ensureDefaultLogoLoaded();
+      toast('Logo por defecto restaurado ✅');
+    });
+
     /*************** Firma ***************/
     const canvas = document.getElementById('sigPad');
     const signaturePad = new window.SignaturePad(canvas, { backgroundColor: 'rgba(0,0,0,0)' });
@@ -280,7 +315,7 @@
     window.addEventListener('orientationchange', resizeCanvas);
     document.getElementById('limpiarFirma').addEventListener('click', () => signaturePad.clear());
 
-    /*************** Fotos (galería / cámara) ***************/
+    /*************** Fotos ***************/
     const thumbs = document.getElementById('thumbs');
     let fotosDataURLs = [];
     const fotosGaleria = document.getElementById('fotosGaleria');
@@ -329,7 +364,6 @@
       const dif = m2 - m1;
       return Math.floor(dif/60)+':'+pad2(dif%60);
     }
-
     function get(id){ return document.getElementById(id).value.trim(); }
 
     function formDataToObj(consecutivo){
@@ -345,12 +379,12 @@
         acciones:get('acciones'),
         repuestos:get('repuestos'), horas:get('horas'), estado:get('estado'),
         fotos:fotosDataURLs,
-        logo:getLogoFijo(),
+        logo:getLogoFijo(),     // ✅ usa el fijo
         firma
       };
     }
 
-    /*************** PDF (y aquí se “consume” el consecutivo) ***************/
+    /*************** PDF ***************/
     function generarPDF(){
       const used = Number(document.getElementById('numReporte').value || peekNext());
       const obj = formDataToObj(used);
@@ -415,7 +449,6 @@
         try { doc.addImage(obj.firma, 'PNG', M+10, y+10, 340, 110); } catch(e){}
       }
 
-      // Nombre
       const nombre = `OT_${String(obj.consecutivo).padStart(5,'0')}_${(obj.marca||'Equipo')}_${(obj.modelo||'')}.pdf`
         .replace(/[^a-z0-9\-_\.]+/gi,'_');
 
@@ -429,7 +462,7 @@
       a.remove();
       setTimeout(()=>URL.revokeObjectURL(url), 1500);
 
-      // ✅ AQUÍ es donde se incrementa “de verdad”
+      // ✅ SOLO AQUÍ se guarda el consecutivo usado
       commitUsed(used);
       document.getElementById('numReporte').value = peekNext();
       toast(`PDF generado. Siguiente: #${document.getElementById('numReporte').value}`);
@@ -443,8 +476,7 @@
         fotosDataURLs = [];
         refreshThumbs();
         initFechaHora();
-        // ✅ NO toca el consecutivo, solo vuelve a mostrar el preview
-        document.getElementById('numReporte').value = peekNext();
+        document.getElementById('numReporte').value = peekNext(); // preview
       }, 0);
     });
 
@@ -459,9 +491,8 @@
     async function init(){
       resizeCanvas();
       initFechaHora();
-      await ensureDefaultLogoLoaded();
-      // ✅ SOLO muestra el número; no guarda nada
-      document.getElementById('numReporte').value = peekNext();
+      await ensureDefaultLogoLoaded();            // carga default si no hay fijo
+      document.getElementById('numReporte').value = peekNext(); // preview sin guardar
     }
     init();
   </script>
