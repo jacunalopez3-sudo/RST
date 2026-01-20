@@ -23,27 +23,15 @@
       color:var(--text);
       font-size:16px;
     }
-
     header{
       position:sticky;top:0;z-index:5;
       background:rgba(9,16,42,.75);
       backdrop-filter:blur(10px);
       border-bottom:1px solid var(--border)
     }
-
-    .wrap{
-      max-width:1600px;
-      margin:0 auto;
-      padding:20px;
-    }
-
+    .wrap{max-width:1600px;margin:0 auto;padding:20px;}
     h1{margin:0;font-size:1.55rem;font-weight:800}
     .row{display:grid;grid-template-columns:1fr;gap:18px}
-
-    @media (min-width:900px){
-      .row{grid-template-columns:1fr;}
-    }
-
     .card{
       background:var(--card);
       border:1px solid var(--border);
@@ -51,81 +39,42 @@
       box-shadow:var(--shadow);
       padding:20px;
     }
-
     .card h2{margin:0 0 12px;font-size:1.25rem}
-
     label{
-      display:block;
-      margin:12px 0 8px;
-      color:var(--muted);
-      font-size:1rem;
-      font-weight:600;
+      display:block;margin:12px 0 8px;color:var(--muted);
+      font-size:1rem;font-weight:600;
     }
-
     input[type="text"],input[type="number"],input[type="date"],input[type="time"],input[type="email"],textarea,select{
-      width:100%;
-      padding:14px 14px;
-      border-radius:14px;
-      border:1px solid var(--border);
-      background:#0f1732;
-      color:var(--text);
-      outline:none;
-      font-size:1.05rem;
+      width:100%;padding:14px 14px;border-radius:14px;border:1px solid var(--border);
+      background:#0f1732;color:var(--text);outline:none;font-size:1.05rem;
     }
-
     textarea{min-height:130px;resize:vertical}
-
-    .grid-2{display:grid;grid-template-columns:1fr;gap:14px}
-    .grid-3{display:grid;grid-template-columns:1fr;gap:14px}
-    .grid-4{display:grid;grid-template-columns:1fr;gap:14px}
-
+    .grid-2,.grid-3,.grid-4{display:grid;grid-template-columns:1fr;gap:14px}
     @media (min-width:700px){
       .grid-2{grid-template-columns:1fr 1fr}
       .grid-3{grid-template-columns:1fr 1fr 1fr}
       .grid-4{grid-template-columns:1fr 1fr 1fr 1fr}
     }
-
     .muted{color:var(--muted);font-size:1rem}
     .btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px}
-
     button,.btn{
-      appearance:none;
-      border:1px solid var(--border);
-      background:#101a35;
-      color:var(--text);
-      border-radius:16px;
-      padding:12px 16px;
-      font-weight:700;
-      cursor:pointer;
-      box-shadow:var(--shadow);
-      font-size:1.05rem;
+      appearance:none;border:1px solid var(--border);background:#101a35;color:var(--text);
+      border-radius:16px;padding:12px 16px;font-weight:700;cursor:pointer;
+      box-shadow:var(--shadow);font-size:1.05rem;
     }
     button.primary{background:#2d7bd9;border-color:#2d7bd9}
     button.success{background:#18a877;border-color:#159569}
     button.danger{background:#e74a3b;border-color:#c0392b}
-
     .thumbs{
-      display:grid;
-      grid-template-columns:repeat(auto-fill,minmax(110px,1fr));
-      gap:10px;
-      margin-top:10px
+      display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));
+      gap:10px;margin-top:10px
     }
     .thumbs img{
-      width:100%;
-      height:100px;
-      object-fit:cover;
-      border-radius:12px;
-      border:1px solid var(--border)
+      width:100%;height:100px;object-fit:cover;border-radius:12px;border:1px solid var(--border)
     }
-
     canvas#sigPad{
-      width:100%;
-      height:220px;
-      background:#0f1732;
-      border:1px dashed #2c3b6a;
-      border-radius:14px
+      width:100%;height:220px;background:#0f1732;border:1px dashed #2c3b6a;border-radius:14px
     }
-
     .footer{color:var(--muted);font-size:.95rem;margin-top:10px}
     .hidden{display:none !important;}
   </style>
@@ -164,7 +113,7 @@
           <div class="grid-3">
             <div>
               <label>Cliente / Clínica / Hospital</label>
-              <input type="text" id="cliente" required placeholder="Ej. Clínica Santa María" />
+              <input type="text" id="cliente" required />
             </div>
             <div>
               <label>Responsable en sitio</label>
@@ -177,12 +126,11 @@
           </div>
 
           <h3 class="muted">Equipo atendido</h3>
-
           <div class="grid-4">
             <div><label>Marca</label><input type="text" id="marca" required /></div>
             <div><label>Modelo</label><input type="text" id="modelo" required /></div>
             <div><label>N° de serie</label><input type="text" id="serie" required /></div>
-            <div><label>Activo</label><input type="text" id="activo" placeholder="Ej. Código interno" /></div>
+            <div><label>Activo</label><input type="text" id="activo" /></div>
           </div>
 
           <div class="grid-2">
@@ -205,7 +153,7 @@
           <textarea id="acciones" required></textarea>
 
           <div class="grid-3">
-            <div><label>Repuestos utilizados</label><input type="text" id="repuestos" placeholder="Separar por coma" /></div>
+            <div><label>Repuestos utilizados</label><input type="text" id="repuestos" /></div>
             <div><label>Horas trabajadas</label><input type="number" id="horas" step="0.1" min="0" value="1" /></div>
             <div>
               <label>Estado final</label>
@@ -219,8 +167,12 @@
           </div>
 
           <label>Fotografías (evidencia)</label>
-          <!-- ✅ CAMBIO: quitamos capture para que salga Cámara / Archivos / Fototeca -->
-          <input type="file" id="fotos" accept="image/*" multiple />
+          <div class="btns">
+            <button type="button" class="btn" id="btnFotosGaleria">Seleccionar de Fototeca / Archivos</button>
+            <button type="button" class="btn" id="btnFotosCamara">Tomar foto (cámara)</button>
+          </div>
+          <input type="file" id="fotosGaleria" accept="image/*" multiple class="hidden" />
+          <input type="file" id="fotosCamara" accept="image/*" capture="environment" multiple class="hidden" />
           <div id="thumbs" class="thumbs"></div>
 
           <div class="grid-2">
@@ -229,7 +181,9 @@
               <input type="file" id="logo" accept="image/*" />
               <div class="btns">
                 <button type="button" id="fijarLogo" class="btn">Guardar logo como fijo</button>
+                <button type="button" id="resetLogo" class="btn danger">Restaurar logo por defecto</button>
               </div>
+              <div class="footer">El logo por defecto se carga automáticamente desde <strong>logo.png</strong>.</div>
             </div>
             <div>
               <label>Firma del cliente</label>
@@ -241,16 +195,13 @@
           </div>
 
           <div class="btns">
-            <button type="button" class="primary" id="guardar">Guardar local</button>
             <button type="button" class="success" id="pdf">Generar PDF</button>
             <button type="reset" class="danger" id="limpiarForm">Limpiar formulario</button>
           </div>
 
-          <div class="footer">Consecutivo y datos en <strong>localStorage</strong>. Sin Service Worker.</div>
+          <div class="footer">Consecutivo y logo fijo en <strong>localStorage</strong>.</div>
         </form>
       </section>
-
-      <section class="card hidden" id="panelGuardados"></section>
     </div>
   </main>
 
@@ -275,17 +226,15 @@
       company:   'Bennu Healthcare Solutions',
       legalId:   '3-101804878',
       address:   'Sabana Sur, Mata Redonda, Centro Comercial del Sur',
-      email:     'jacuna@bennucr.com',
-      phone:     'Teléfono: 83485676',
-      technician:'Técnico: Ing. Juan Carlos Acuña Lopez'
+      email:     'serviciotecncio@bennucr.com',
+      phone:     '6037-4749'
     };
 
-    const LS_KEY_REPORTES = 'reportes_simple_list';
+    // ✅ Logo por defecto (archivo en tu repo)
+    const DEFAULT_LOGO_URL = './logo.png';
+
     const LS_KEY_CONSEC   = 'reportes_simple_consecutivo';
     const LS_KEY_LOGO     = 'reportes_simple_logo_fijo';
-
-    function loadReportes(){ try{ return JSON.parse(localStorage.getItem(LS_KEY_REPORTES) || '[]'); }catch(e){ return []; } }
-    function saveReportes(arr){ try{ localStorage.setItem(LS_KEY_REPORTES, JSON.stringify(arr)); }catch(e){ alert('No se pudo guardar.'); } }
 
     function peekConsecutivo(){
       let lastUsed = parseInt(localStorage.getItem(LS_KEY_CONSEC) || '56', 10);
@@ -296,11 +245,36 @@
     }
 
     function getLogoFijo(){ return localStorage.getItem(LS_KEY_LOGO); }
-    function setLogoFijo(dataURL){ try{ localStorage.setItem(LS_KEY_LOGO, dataURL); }catch(e){ alert('No se pudo guardar el logo.'); } }
+    function setLogoFijo(dataURL){ localStorage.setItem(LS_KEY_LOGO, dataURL); }
+    function clearLogoFijo(){ localStorage.removeItem(LS_KEY_LOGO); }
 
+    async function fileToDataURL(file){
+      return new Promise((res,rej)=>{
+        const r = new FileReader();
+        r.onload = ()=>res(r.result);
+        r.onerror = rej;
+        r.readAsDataURL(file);
+      });
+    }
+
+    // ✅ Carga automática del logo (si aún no hay uno guardado)
+    async function ensureDefaultLogoLoaded(){
+      if (getLogoFijo()) return;
+      try{
+        const res = await fetch(DEFAULT_LOGO_URL, { cache:'no-store' });
+        if (!res.ok) return;
+        const blob = await res.blob();
+        const dataUrl = await fileToDataURL(blob);
+        setLogoFijo(dataUrl);
+      }catch(e){
+        // Si falla, no bloquea la app
+        console.warn('No se pudo cargar logo.png:', e);
+      }
+    }
+
+    // Firma
     const canvas = document.getElementById('sigPad');
     const signaturePad = new window.SignaturePad(canvas, { backgroundColor: 'rgba(0,0,0,0)' });
-
     function resizeCanvas(){
       const ratio = Math.max(window.devicePixelRatio || 1, 1);
       canvas.width = canvas.offsetWidth * ratio;
@@ -312,8 +286,9 @@
     window.addEventListener('orientationchange', resizeCanvas);
     document.getElementById('limpiarFirma').addEventListener('click', () => signaturePad.clear());
 
+    // Logo input (solo si lo quieres cambiar manualmente)
     const logoInput = document.getElementById('logo');
-    let logoDataURL = getLogoFijo() || null;
+    let logoDataURL = null;
 
     logoInput.addEventListener('change', async (ev) => {
       const f = ev.target.files?.[0];
@@ -326,32 +301,43 @@
       toast('Logo fijo guardado');
     });
 
-    const fotosInput = document.getElementById('fotos');
+    document.getElementById('resetLogo').addEventListener('click', async () => {
+      clearLogoFijo();
+      await ensureDefaultLogoLoaded();
+      toast('Logo restaurado (logo.png)');
+    });
+
+    // Fotos (galería y cámara)
     const thumbs = document.getElementById('thumbs');
     let fotosDataURLs = [];
+    const fotosGaleria = document.getElementById('fotosGaleria');
+    const fotosCamara = document.getElementById('fotosCamara');
+    document.getElementById('btnFotosGaleria').addEventListener('click', () => fotosGaleria.click());
+    document.getElementById('btnFotosCamara').addEventListener('click', () => fotosCamara.click());
+    fotosGaleria.addEventListener('change', (ev) => handleFotos(ev.target.files));
+    fotosCamara.addEventListener('change', (ev) => handleFotos(ev.target.files));
 
-    fotosInput.addEventListener('change', async (ev) => {
-      const files = Array.from(ev.target.files || []);
-      fotosDataURLs = [];
-      thumbs.innerHTML = '';
-      for (const f of files) {
+    async function handleFotos(fileList){
+      const files = Array.from(fileList || []);
+      if (!files.length) return;
+      for (const f of files){
         const url = await fileToDataURL(f);
         fotosDataURLs.push(url);
+      }
+      fotosGaleria.value = '';
+      fotosCamara.value = '';
+      refreshThumbs();
+    }
+    function refreshThumbs(){
+      thumbs.innerHTML = '';
+      for (const url of fotosDataURLs){
         const img = document.createElement('img');
         img.src = url;
         thumbs.appendChild(img);
       }
-    });
-
-    function fileToDataURL(file){
-      return new Promise((res,rej)=>{
-        const r = new FileReader();
-        r.onload = ()=>res(r.result);
-        r.onerror = rej;
-        r.readAsDataURL(file);
-      });
     }
 
+    // Utilidades
     function pad2(n){ return (n<10?'0':'') + n; }
     function initFechaHora(){
       const d = new Date();
@@ -370,13 +356,10 @@
     function formDataToObj(consecutivoForzado){
       const get = id => document.getElementById(id).value.trim();
       const firma = signaturePad.isEmpty() ? null : signaturePad.toDataURL('image/png');
-      const id = `${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
-
       const consecutivo = Number(consecutivoForzado || document.getElementById('numReporte').value || peekConsecutivo());
       const dur = calcDuracion(get('horaIni'), get('horaFin'));
-
       return {
-        id, consecutivo,
+        consecutivo,
         fecha:get('fecha'), horaIni:get('horaIni'), horaFin:get('horaFin'), duracion:dur,
         cliente:get('cliente'), responsable:get('responsable'), correo:get('correo'),
         marca:get('marca'), modelo:get('modelo'), serie:get('serie'),
@@ -385,20 +368,10 @@
         acciones:get('acciones'),
         repuestos:get('repuestos'), horas:get('horas'), estado:get('estado'),
         fotos:fotosDataURLs,
-        logo:(logoDataURL || getLogoFijo()),
+        logo:(getLogoFijo() || logoDataURL), // ✅ SIEMPRE intenta usar el fijo
         firma
       };
     }
-
-    function guardarLocal(){
-      const used = Number(document.getElementById('numReporte').value || peekConsecutivo());
-      const obj = formDataToObj(used);
-      const arr = loadReportes();
-      arr.push(obj);
-      saveReportes(arr);
-      toast(`Guardado reporte #${obj.consecutivo}`);
-    }
-    document.getElementById('guardar').addEventListener('click', guardarLocal);
 
     function generarPDF(){
       const used = Number(document.getElementById('numReporte').value || peekConsecutivo());
@@ -409,19 +382,19 @@
       const M = 36;
       let y = M;
 
+      // Logo grande fijo
       if (obj.logo){
-        try { doc.addImage(obj.logo, 'PNG', M, y, 150, 75); } catch(e){}
+        try { doc.addImage(obj.logo, 'PNG', M, y, 160, 80); } catch(e){}
       }
 
-      const rightX = M + 170;
+      const rightX = M + 180;
       doc.setFont('helvetica','bold'); doc.setFontSize(12);
-      doc.text(HEADER.company, rightX, y+14);
+      doc.text(HEADER.company, rightX, y+16);
       doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      doc.text(HEADER.legalId, rightX, y+30);
-      doc.text(HEADER.address, rightX, y+46);
-      doc.text(HEADER.email, rightX, y+62);
-      doc.text(HEADER.phone, rightX, y+78);
-      if (HEADER.technician) doc.text(HEADER.technician, rightX, y+94);
+      doc.text(HEADER.legalId, rightX, y+34);
+      doc.text(HEADER.address, rightX, y+50);
+      doc.text(HEADER.email, rightX, y+66);
+      doc.text(HEADER.phone, rightX, y+82);
 
       y += 120;
       doc.setDrawColor(120,140,170);
@@ -438,40 +411,6 @@
       doc.text(`Hora Fin: ${obj.horaFin}`, M+340, y);
       doc.text(`Tiempo: ${obj.duracion}`, 595-M, y, { align:'right' });
 
-      y += 22;
-      doc.setFont('helvetica','bold'); doc.setFontSize(11);
-      doc.text('DATOS DEL CLIENTE', M, y);
-      doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      y += 16; doc.text(`Cliente: ${obj.cliente || '-'}`, M, y);
-      y += 16; doc.text(`Responsable: ${obj.responsable || '-'}`, M, y);
-      if (obj.correo) { y += 16; doc.text(`Correo: ${obj.correo}`, M, y); }
-
-      y += 18;
-      doc.setDrawColor(120,140,170);
-      doc.line(M, y, 595-M, y);
-
-      y += 18;
-      doc.setFont('helvetica','bold'); doc.setFontSize(11);
-      doc.text('EQUIPO ATENDIDO', M, y);
-      doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      y += 16; doc.text(`Marca: ${obj.marca || '-'}`, M, y);
-      y += 16; doc.text(`Modelo: ${obj.modelo || '-'}`, M, y);
-      y += 16; doc.text(`Serie: ${obj.serie || '-'}`, M, y);
-      y += 16; doc.text(`Activo: ${obj.activo || '-'}`, M, y);
-
-      y += 18;
-      doc.setDrawColor(120,140,170);
-      doc.line(M, y, 595-M, y);
-
-      y += 18;
-      doc.setFont('helvetica','bold'); doc.setFontSize(11);
-      doc.text('ACTUACIONES', M, y);
-      doc.text('CANTIDAD', 595-M, y, { align:'right' });
-      y += 14;
-      doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      doc.text(String(obj.actuacion || '-'), M, y);
-      doc.text(String(obj.cantidad || '1'), 595-M, y, { align:'right' });
-
       y += 18;
       doc.setDrawColor(120,140,170);
       doc.line(M, y, 595-M, y);
@@ -487,18 +426,7 @@
         doc.text(line, M, y); y += 12;
       }
 
-      if (obj.fotos && obj.fotos.length){
-        for (let i=0;i<obj.fotos.length;i++){
-          if (y > 500){ doc.addPage(); y = M; }
-          y += 10;
-          doc.setFont('helvetica','bold'); doc.setFontSize(10);
-          doc.text(`Foto ${i+1}`, M, y);
-          y += 8;
-          try { doc.addImage(obj.fotos[i], 'JPEG', M, y, 595-2*M, 260); } catch(e){}
-          y += 270;
-        }
-      }
-
+      // Firma
       if (y > 650){ doc.addPage(); y = M; }
       doc.setFont('helvetica','bold'); doc.setFontSize(11);
       doc.text('Firma del cliente / conformidad', M, y);
@@ -542,7 +470,7 @@
       setTimeout(()=>{
         signaturePad.clear();
         fotosDataURLs = [];
-        thumbs.innerHTML = '';
+        refreshThumbs();
         document.getElementById('numReporte').value = peekConsecutivo();
         initFechaHora();
       }, 0);
@@ -556,10 +484,11 @@
       setTimeout(()=>d.remove(),2200);
     }
 
-    function init(){
+    async function init(){
       resizeCanvas();
       initFechaHora();
       document.getElementById('numReporte').value = peekConsecutivo();
+      await ensureDefaultLogoLoaded(); // ✅ Carga automático si no existe
     }
     init();
   </script>
