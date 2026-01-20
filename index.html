@@ -241,7 +241,7 @@
     const HEADER = {
       company:   'Bennu Healthcare Solutions',
       legalId:   '3-101804878',
-      address:   'Uruca, San José, Costa Rica',
+      address:   'Sabana Sur, Mata Redonda, Centro Comercial del Sur',
     };
 
     const DEFAULT_LOGO_URL = './logo.png';
@@ -411,9 +411,18 @@
       const M = 36;
       let y = M;
 
+      // Helper: detecta formato real del dataURL (PNG/JPEG)
+      function detectFormat(dataUrl){
+        if (!dataUrl || typeof dataUrl !== 'string') return 'JPEG';
+        if (dataUrl.startsWith('data:image/png')) return 'PNG';
+        if (dataUrl.startsWith('data:image/webp')) return 'WEBP'; // por si acaso
+        if (dataUrl.startsWith('data:image/jpg') || dataUrl.startsWith('data:image/jpeg')) return 'JPEG';
+        return 'JPEG';
+      }
+
       // Logo
       if (obj.logo){
-        try { doc.addImage(obj.logo, 'PNG', M, y, 160, 80); } catch(e){}
+        try { doc.addImage(obj.logo, detectFormat(obj.logo), M, y, 160, 80); } catch(e){}
       }
 
       const rightX = M + 180;
@@ -424,7 +433,6 @@
       doc.text(HEADER.legalId, rightX, y+34);
       doc.text(HEADER.address, rightX, y+50);
 
-      // ✅ Cambio solicitado: "Ingeniería:" en el PDF
       doc.text(`Ingeniería: ${obj.tecnicoBHS || '-'}`, rightX, y+66);
       doc.text(`Email: ${obj.emailBHS || '-'}`, rightX, y+82);
       doc.text(`Tel: ${obj.phoneBHS || '-'}`, rightX, y+98);
@@ -459,6 +467,48 @@
         doc.text(line, M, y); y += 12;
       }
 
+      // ✅✅✅ BLOQUE AÑADIDO: Fotos en el PDF (esto es lo que faltaba)
+      if (obj.fotos && obj.fotos.length){
+        // título
+        if (y > 720){ doc.addPage(); y = M; }
+        y += 10;
+        doc.setDrawColor(120,140,170);
+        doc.line(M, y, 595-M, y);
+        y += 18;
+
+        doc.setFont('helvetica','bold'); doc.setFontSize(11);
+        doc.text('Imágenes:', M, y);
+        y += 10;
+
+        const pageW = doc.internal.pageSize.getWidth();
+        const pageH = doc.internal.pageSize.getHeight();
+        const maxW = pageW - 2*M;
+        const imgH = 320;     // alto estándar
+        const gap = 14;
+
+        for (let i=0; i<obj.fotos.length; i++){
+          const dataUrl = obj.fotos[i];
+          const fmt = detectFormat(dataUrl);
+
+          // si no cabe, nueva página
+          if (y + imgH + 40 > pageH){ doc.addPage(); y = M; }
+
+          doc.setFont('helvetica','bold'); doc.setFontSize(10);
+          doc.text(`Foto ${i+1}`, M, y+12);
+
+          try{
+            // Imagen
+            doc.addImage(dataUrl, fmt, M, y+18, maxW, imgH);
+          }catch(e){
+            // si alguna imagen falla, continuamos sin romper todo el PDF
+            doc.setFont('helvetica','normal'); doc.setFontSize(9);
+            doc.text('(No se pudo insertar esta imagen)', M, y+30);
+          }
+
+          y += (imgH + 18 + gap);
+        }
+      }
+
       // Firma
       if (y > 650){ doc.addPage(); y = M; }
       doc.setFont('helvetica','bold'); doc.setFontSize(11);
@@ -467,7 +517,7 @@
       doc.setDrawColor(80,100,140);
       doc.rect(M, y, 360, 130);
       if (obj.firma){
-        try { doc.addImage(obj.firma, 'PNG', M+10, y+10, 340, 110); } catch(e){}
+        try { doc.addImage(obj.firma, detectFormat(obj.firma), M+10, y+10, 340, 110); } catch(e){}
       }
 
       const nombre = `OT_${String(obj.consecutivo).padStart(5,'0')}_${(obj.marca||'Equipo')}_${(obj.modelo||'')}.pdf`
