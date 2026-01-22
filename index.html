@@ -3,8 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Reporte Técnico – Equipos Médicos (simple)</title>
-  <meta name="description" content="Reporte técnico (PDF, consecutivo, firma y fotos) sin Service Worker." />
+  <title>Reporte de ST BHS</title>
+
+  <meta name="description" content="Reporte técnico con PDF profesional tipo OT, consecutivo, fotos y firma." />
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
@@ -29,28 +31,28 @@
       backdrop-filter:blur(10px);
       border-bottom:1px solid var(--border)
     }
-    .wrap{max-width:1600px;margin:0 auto;padding:20px;}
-    h1{margin:0;font-size:1.55rem;font-weight:800}
+    .wrap{max-width:1500px;margin:0 auto;padding:18px;}
+    h1{margin:0;font-size:1.5rem;font-weight:800}
     .row{display:grid;grid-template-columns:1fr;gap:18px}
     .card{
       background:var(--card);
       border:1px solid var(--border);
       border-radius:var(--radius);
       box-shadow:var(--shadow);
-      padding:20px;
+      padding:18px;
     }
-    .card h2{margin:0 0 12px;font-size:1.25rem}
+    .card h2{margin:0 0 12px;font-size:1.2rem}
     label{
       display:block;margin:12px 0 8px;color:var(--muted);
       font-size:1rem;font-weight:600;
     }
     input[type="text"],input[type="number"],input[type="date"],input[type="time"],input[type="email"],textarea,select{
-      width:100%;padding:14px 14px;border-radius:14px;border:1px solid var(--border);
+      width:100%;padding:14px;border-radius:14px;border:1px solid var(--border);
       background:#0f1732;color:var(--text);outline:none;font-size:1.05rem;
     }
-    textarea{min-height:130px;resize:vertical}
+    textarea{min-height:140px;resize:vertical}
     .grid-2,.grid-3,.grid-4{display:grid;grid-template-columns:1fr;gap:14px}
-    @media (min-width:700px){
+    @media (min-width:820px){
       .grid-2{grid-template-columns:1fr 1fr}
       .grid-3{grid-template-columns:1fr 1fr 1fr}
       .grid-4{grid-template-columns:1fr 1fr 1fr 1fr}
@@ -64,8 +66,9 @@
     }
     button.success{background:#18a877;border-color:#159569}
     button.danger{background:#e74a3b;border-color:#c0392b}
+    .hidden{display:none !important;}
     canvas#sigPad{
-      width:100%;height:220px;background:#0f1732;border:1px dashed #2c3b6a;border-radius:14px
+      width:100%;height:240px;background:#0f1732;border:1px dashed #2c3b6a;border-radius:14px
     }
     .thumbs{
       display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));
@@ -75,549 +78,668 @@
       width:100%;height:100px;object-fit:cover;border-radius:12px;border:1px solid var(--border)
     }
     .footer{color:var(--muted);font-size:.95rem;margin-top:10px}
-    .hidden{display:none !important;}
-    .subhead{margin:8px 0 2px;font-size:1.05rem;font-weight:800;color:#dfe8ff}
+    .subhead{margin:10px 0 2px;font-size:1.05rem;font-weight:800;color:#dfe8ff}
   </style>
 </head>
 
 <body>
-  <header>
-    <div class="wrap"><h1>Reportes Técnicos – Versión Simple</h1></div>
-  </header>
+<header>
+  <div class="wrap"><h1>Reporte de Servicio Técnico – BHS</h1></div>
+</header>
 
-  <main class="wrap">
-    <div class="row">
-      <section class="card">
-        <h2>Nuevo reporte</h2>
+<main class="wrap">
+  <div class="row">
+    <section class="card">
+      <h2>Nuevo reporte</h2>
 
-        <form id="reporteForm">
-          <div class="subhead">Datos empresa (BHS)</div>
-          <div class="grid-3">
-            <div>
-              <label>Ingeniería:</label>
-              <select id="tecnicoBHS" required>
-                <option value="" selected disabled>Seleccionar...</option>
-                <option>Ing. Juan Carlos A</option>
-                <option>Ing. Leonardo Chacón C</option>
-              </select>
+      <form id="reporteForm">
+
+        <div class="subhead">Datos empresa (BHS)</div>
+        <div class="grid-3">
+          <div>
+            <label>Ingeniería:</label>
+            <select id="tecnicoBHS" required>
+              <option value="" selected disabled>Seleccionar...</option>
+              <option>Ing. Juan Carlos A</option>
+              <option>Ing. Leonardo Chacón C</option>
+            </select>
+          </div>
+          <div>
+            <label>Teléfono (BHS)</label>
+            <input type="text" id="phoneBHS" value="6037-4749" />
+          </div>
+          <div>
+            <label>Email (BHS)</label>
+            <input type="text" id="emailBHS" value="serviciotecncio@bennucr.com" />
+          </div>
+        </div>
+
+        <div class="grid-4">
+          <div>
+            <label>N° de reporte (consecutivo)</label>
+            <input type="text" id="numReporte" readonly />
+            <div class="footer">Este número solo sube cuando generas PDF.</div>
+          </div>
+          <div>
+            <label>Fecha</label>
+            <input type="date" id="fecha" required />
+          </div>
+          <div>
+            <label>Hora inicio</label>
+            <input type="time" id="horaIni" required />
+          </div>
+          <div>
+            <label>Hora fin</label>
+            <input type="time" id="horaFin" required />
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div>
+            <label>Cliente / Clínica / Hospital</label>
+            <input type="text" id="cliente" required />
+          </div>
+          <div>
+            <label>Responsable en sitio (cliente)</label>
+            <input type="text" id="responsable" required placeholder="Nombre y apellido" />
+          </div>
+          <div>
+            <label>Correo del cliente</label>
+            <input type="email" id="correo" placeholder="cliente@ejemplo.com" />
+          </div>
+        </div>
+
+        <h3 class="muted">Equipo atendido</h3>
+        <div class="grid-4">
+          <div><label>Equipo</label><input type="text" id="equipo" required placeholder="Ej. Autoclave / Monitor / Torre" /></div>
+          <div><label>Marca</label><input type="text" id="marca" required /></div>
+          <div><label>Modelo</label><input type="text" id="modelo" required /></div>
+          <div><label>N° de serie</label><input type="text" id="serie" required /></div>
+        </div>
+
+        <div class="grid-2">
+          <div><label>Activo</label><input type="text" id="activo" placeholder="Código interno si aplica" /></div>
+          <div>
+            <label>Actuación</label>
+            <select id="actuacion">
+              <option>Mtto Preventivo</option>
+              <option>Mtto Correctivo</option>
+              <option>Instalación de Repuesto</option>
+              <option>Otro</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <label>Cantidad</label>
+            <input type="number" id="cantidad" step="0.1" min="0" value="1" />
+          </div>
+          <div>
+            <label>Estado final</label>
+            <select id="estado">
+              <option>Operativo</option>
+              <option>Operativo con observaciones</option>
+              <option>En espera de repuesto</option>
+              <option>No operativo</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div><label>Repuestos utilizados</label><input type="text" id="repuestos" /></div>
+          <div><label>Horas trabajadas</label><input type="number" id="horas" step="0.1" min="0" value="1" /></div>
+        </div>
+
+        <label>Observaciones / diagnóstico</label>
+        <textarea id="acciones" required></textarea>
+
+        <label>Fotografías (evidencia)</label>
+        <div class="btns">
+          <button type="button" class="btn" id="btnFotosGaleria">Seleccionar de Fototeca / Archivos</button>
+          <button type="button" class="btn" id="btnFotosCamara">Tomar foto (cámara)</button>
+          <button type="button" class="btn danger" id="btnLimpiarFotos">Limpiar fotos</button>
+        </div>
+        <input type="file" id="fotosGaleria" accept="image/*" multiple class="hidden" />
+        <input type="file" id="fotosCamara" accept="image/*" capture="environment" multiple class="hidden" />
+        <div id="thumbs" class="thumbs"></div>
+
+        <div class="grid-2">
+          <div>
+            <label>Logo de empresa</label>
+            <input type="file" id="logoInput" accept="image/*" />
+            <div class="btns">
+              <button type="button" class="btn" id="btnFijarLogo">Fijar logo</button>
+              <button type="button" class="btn danger" id="btnRestaurarLogo">Restaurar logo por defecto</button>
             </div>
-            <div>
-              <label>Teléfono (BHS)</label>
-              <input type="text" id="phoneBHS" value="6037-4749" />
-            </div>
-            <div>
-              <label>Email (BHS)</label>
-              <input type="text" id="emailBHS" value="serviciotecncio@bennucr.com" />
-            </div>
+            <div class="footer">Se usa <strong>logo.png</strong> por defecto si no fijas uno.</div>
           </div>
 
-          <div class="grid-4">
-            <div>
-              <label>N° de reporte (consecutivo)</label>
-              <input type="text" id="numReporte" readonly />
-              <div class="footer">Este número solo aumenta cuando generas PDF.</div>
-            </div>
-            <div>
-              <label>Fecha</label>
-              <input type="date" id="fecha" required />
-            </div>
-            <div>
-              <label>Hora inicio</label>
-              <input type="time" id="horaIni" required />
-            </div>
-            <div>
-              <label>Hora fin</label>
-              <input type="time" id="horaFin" required />
+          <div>
+            <label>Firma del cliente</label>
+            <canvas id="sigPad"></canvas>
+            <div class="btns">
+              <button type="button" id="limpiarFirma" class="btn">Limpiar firma</button>
             </div>
           </div>
+        </div>
 
-          <div class="grid-3">
-            <div>
-              <label>Cliente / Clínica / Hospital</label>
-              <input type="text" id="cliente" required />
-            </div>
+        <div class="btns">
+          <button type="button" class="success" id="pdf">Generar PDF (Formato OT)</button>
+          <button type="reset" class="danger" id="limpiarForm">Limpiar formulario</button>
+        </div>
 
-            <div>
-              <label>Responsable en sitio (cliente)</label>
-              <input type="text" id="responsable" required placeholder="Nombre y apellido" />
-            </div>
+        <div class="footer">Consecutivo inicia en <strong>#95</strong> y solo sube al generar PDF.</div>
+      </form>
+    </section>
+  </div>
+</main>
 
-            <div>
-              <label>Correo del cliente (para enviar PDF)</label>
-              <input type="email" id="correo" placeholder="cliente@ejemplo.com" />
-            </div>
-          </div>
+<!-- jsPDF -->
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<!-- Signature Pad -->
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@5.0.10/dist/signature_pad.umd.min.js"></script>
 
-          <h3 class="muted">Equipo atendido</h3>
-          <div class="grid-4">
-            <div><label>Marca</label><input type="text" id="marca" required /></div>
-            <div><label>Modelo</label><input type="text" id="modelo" required /></div>
-            <div><label>N° de serie</label><input type="text" id="serie" required /></div>
-            <div><label>Activo</label><input type="text" id="activo" /></div>
-          </div>
+<script>
+  /**************** CONFIG ****************/
+  const HEADER = {
+    company: 'Bennu Healthcare Solutions',
+    legalId: '3-101804878',
+    address: 'Sabana Sur, Mata Redonda, Centro Comercial del Sur',
+  };
 
-          <div class="grid-2">
-            <div>
-              <label>Actuación</label>
-              <select id="actuacion">
-                <option>Mtto Preventivo</option>
-                <option>Mtto Correctivo</option>
-                <option>Instalación de Repuesto</option>
-                <option>Otro</option>
-              </select>
-            </div>
-            <div>
-              <label>Cantidad</label>
-              <input type="number" id="cantidad" step="0.1" min="0" value="1" />
-            </div>
-          </div>
+  const DEFAULT_LOGO_URL = './logo.png';
 
-          <label>Observaciones / diagnóstico</label>
-          <textarea id="acciones" required></textarea>
+  const CONSEC_START = 95;
+  const LS_KEY_CONSEC = 'bhs_ot_consecutivo_last_used';
+  const LS_KEY_LOGO   = 'bhs_ot_logo_fijo';
 
-          <div class="grid-3">
-            <div><label>Repuestos utilizados</label><input type="text" id="repuestos" /></div>
-            <div><label>Horas trabajadas</label><input type="number" id="horas" step="0.1" min="0" value="1" /></div>
-            <div>
-              <label>Estado final</label>
-              <select id="estado">
-                <option>Operativo</option>
-                <option>Operativo con observaciones</option>
-                <option>En espera de repuesto</option>
-                <option>No operativo</option>
-              </select>
-            </div>
-          </div>
+  /**************** CONSECUTIVO ****************/
+  function getLastUsed(){
+    const raw = localStorage.getItem(LS_KEY_CONSEC);
+    if (!raw) return (CONSEC_START - 1);
+    const n = parseInt(raw, 10);
+    return Number.isFinite(n) ? n : (CONSEC_START - 1);
+  }
+  function peekNext(){ return getLastUsed() + 1; }
+  function commitUsed(n){ localStorage.setItem(LS_KEY_CONSEC, String(n)); }
 
-          <label>Fotografías (evidencia)</label>
-          <div class="btns">
-            <button type="button" class="btn" id="btnFotosGaleria">Seleccionar de Fototeca / Archivos</button>
-            <button type="button" class="btn" id="btnFotosCamara">Tomar foto (cámara)</button>
-          </div>
-          <input type="file" id="fotosGaleria" accept="image/*" multiple class="hidden" />
-          <input type="file" id="fotosCamara" accept="image/*" capture="environment" multiple class="hidden" />
-          <div id="thumbs" class="thumbs"></div>
+  /**************** LOGO FIJO ****************/
+  function getLogoFijo(){ return localStorage.getItem(LS_KEY_LOGO); }
+  function setLogoFijo(dataURL){ localStorage.setItem(LS_KEY_LOGO, dataURL); }
+  function clearLogoFijo(){ localStorage.removeItem(LS_KEY_LOGO); }
 
-          <div class="grid-2">
-            <div>
-              <label>Logo de empresa</label>
-              <input type="file" id="logoInput" accept="image/*" />
-              <div class="btns">
-                <button type="button" class="btn" id="btnFijarLogo">Fijar logo</button>
-                <button type="button" class="btn danger" id="btnRestaurarLogo">Restaurar logo por defecto</button>
-              </div>
-              <div class="footer">Si no fijas uno, se usa el logo por defecto del repo: <strong>logo.png</strong>.</div>
-            </div>
+  async function fileOrBlobToDataURL(fileOrBlob){
+    return new Promise((res,rej)=>{
+      const r = new FileReader();
+      r.onload = ()=>res(r.result);
+      r.onerror = rej;
+      r.readAsDataURL(fileOrBlob);
+    });
+  }
 
-            <div>
-              <label>Firma del cliente</label>
-              <canvas id="sigPad"></canvas>
-              <div class="btns">
-                <button type="button" id="limpiarFirma" class="btn">Limpiar firma</button>
-              </div>
-            </div>
-          </div>
+  async function ensureDefaultLogoLoaded(){
+    if (getLogoFijo()) return;
+    try{
+      const res = await fetch(DEFAULT_LOGO_URL, { cache:'no-store' });
+      if (!res.ok) return;
+      const blob = await res.blob();
+      const dataUrl = await fileOrBlobToDataURL(blob);
+      setLogoFijo(dataUrl);
+    }catch(e){}
+  }
 
-          <div class="btns">
-            <button type="button" class="success" id="pdf">Generar PDF</button>
-            <button type="reset" class="danger" id="limpiarForm">Limpiar formulario</button>
-          </div>
+  const logoInput = document.getElementById('logoInput');
+  let logoSeleccionado = null;
 
-          <div class="footer">Consecutivo inicia en <strong>#95</strong> y solo se actualiza al generar PDF.</div>
-        </form>
-      </section>
-    </div>
-  </main>
+  logoInput.addEventListener('change', async (ev)=>{
+    const f = ev.target.files?.[0];
+    if (!f) { logoSeleccionado = null; return; }
+    logoSeleccionado = await fileOrBlobToDataURL(f);
+    toast('Logo cargado. Presiona "Fijar logo" para guardarlo.');
+  });
 
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/signature_pad@5.0.10/dist/signature_pad.umd.min.js"></script>
+  document.getElementById('btnFijarLogo').addEventListener('click', ()=>{
+    if (!logoSeleccionado){ alert('Primero selecciona un logo'); return; }
+    setLogoFijo(logoSeleccionado);
+    toast('Logo fijado ✅');
+  });
 
-  <script>
-    const HEADER = {
-      company:   'Bennu Healthcare Solutions',
-      legalId:   '3-101804878',
-      address:   'Uruca, San José, Costa Rica',
+  document.getElementById('btnRestaurarLogo').addEventListener('click', async ()=>{
+    clearLogoFijo();
+    await ensureDefaultLogoLoaded();
+    toast('Logo por defecto restaurado ✅');
+  });
+
+  /**************** FIRMA ****************/
+  const canvas = document.getElementById('sigPad');
+  const signaturePad = new window.SignaturePad(canvas, { backgroundColor:'rgba(0,0,0,0)' });
+
+  function resizeCanvas(){
+    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+    canvas.width = canvas.offsetWidth * ratio;
+    canvas.height = canvas.offsetHeight * ratio;
+    canvas.getContext('2d').setTransform(ratio,0,0,ratio,0,0);
+    signaturePad.clear();
+  }
+
+  window.addEventListener('resize', resizeCanvas);
+  window.addEventListener('orientationchange', resizeCanvas);
+  document.getElementById('limpiarFirma').addEventListener('click', ()=>signaturePad.clear());
+
+  /**************** FOTOS ****************/
+  const thumbs = document.getElementById('thumbs');
+  let fotosDataURLs = [];
+
+  const fotosGaleria = document.getElementById('fotosGaleria');
+  const fotosCamara  = document.getElementById('fotosCamara');
+
+  document.getElementById('btnFotosGaleria').addEventListener('click', ()=>fotosGaleria.click());
+  document.getElementById('btnFotosCamara').addEventListener('click', ()=>fotosCamara.click());
+  document.getElementById('btnLimpiarFotos').addEventListener('click', ()=>{
+    fotosDataURLs = [];
+    refreshThumbs();
+    toast('Fotos limpiadas');
+  });
+
+  fotosGaleria.addEventListener('change', (ev)=>handleFotos(ev.target.files));
+  fotosCamara.addEventListener('change',  (ev)=>handleFotos(ev.target.files));
+
+  async function handleFotos(fileList){
+    const files = Array.from(fileList || []);
+    if (!files.length) return;
+
+    for (const f of files){
+      const url = await fileOrBlobToDataURL(f);
+      fotosDataURLs.push(url);
+    }
+    fotosGaleria.value = '';
+    fotosCamara.value = '';
+    refreshThumbs();
+  }
+
+  function refreshThumbs(){
+    thumbs.innerHTML = '';
+    for (const url of fotosDataURLs){
+      const img = document.createElement('img');
+      img.src = url;
+      thumbs.appendChild(img);
+    }
+  }
+
+  /**************** UTILIDADES ****************/
+  function pad2(n){ return (n<10?'0':'')+n; }
+
+  function initFechaHora(){
+    const d = new Date();
+    document.getElementById('fecha').value = d.toISOString().slice(0,10);
+    const hhmm = pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+    document.getElementById('horaIni').value = hhmm;
+    document.getElementById('horaFin').value = hhmm;
+  }
+
+  function calcDuracion(h1, h2){
+    const [a,b] = h1.split(':').map(Number);
+    const [c,d] = h2.split(':').map(Number);
+    let m1=a*60+b, m2=c*60+d;
+    if (m2<m1) m2 += 24*60;
+    const dif=m2-m1;
+    return Math.floor(dif/60)+':'+pad2(dif%60);
+  }
+
+  function get(id){ return document.getElementById(id).value.trim(); }
+
+  function detectFormat(dataUrl){
+    if (!dataUrl || typeof dataUrl !== 'string') return 'JPEG';
+    if (dataUrl.startsWith('data:image/png')) return 'PNG';
+    if (dataUrl.startsWith('data:image/webp')) return 'WEBP';
+    if (dataUrl.startsWith('data:image/jpg') || dataUrl.startsWith('data:image/jpeg')) return 'JPEG';
+    return 'JPEG';
+  }
+
+  function formDataToObj(consecutivo){
+    const firma = signaturePad.isEmpty() ? null : signaturePad.toDataURL('image/png');
+    return {
+      consecutivo,
+      fecha:get('fecha'),
+      horaIni:get('horaIni'),
+      horaFin:get('horaFin'),
+      duracion: calcDuracion(get('horaIni'), get('horaFin')),
+
+      tecnicoBHS:get('tecnicoBHS'),
+      phoneBHS:get('phoneBHS'),
+      emailBHS:get('emailBHS'),
+
+      cliente:get('cliente'),
+      responsable:get('responsable'),
+      correo:get('correo'),
+
+      equipo:get('equipo'),
+      marca:get('marca'),
+      modelo:get('modelo'),
+      serie:get('serie'),
+      activo:get('activo'),
+
+      actuacion:get('actuacion'),
+      cantidad:get('cantidad'),
+      estado:get('estado'),
+
+      repuestos:get('repuestos'),
+      horas:get('horas'),
+
+      acciones:get('acciones'),
+
+      fotos:fotosDataURLs,
+      logo:getLogoFijo(),
+      firma
     };
+  }
 
-    const DEFAULT_LOGO_URL = './logo.png';
-    const CONSEC_START = 95;
+  /**************** PDF FORMATO OT PROFESIONAL ****************/
+  function generarPDF_OT(){
+    const used = Number(document.getElementById('numReporte').value || peekNext());
+    const obj = formDataToObj(used);
 
-    const LS_KEY_CONSEC = 'reportes_simple_consecutivo_last_used';
-    const LS_KEY_LOGO   = 'reportes_simple_logo_fijo';
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'pt', format:'a4' });
 
-    function getLastUsed(){
-      const raw = localStorage.getItem(LS_KEY_CONSEC);
-      if (!raw) return (CONSEC_START - 1);
-      const n = parseInt(raw, 10);
-      return Number.isFinite(n) ? n : (CONSEC_START - 1);
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+
+    // márgenes
+    const M = 36;
+    const right = pageW - M;
+    const maxW = pageW - 2*M;
+
+    // estilo de líneas
+    const strokeMain = [43, 52, 69];     // #2b3445
+    const strokeSoft = [151, 166, 191];  // #97a6bf
+
+    let y = M;
+
+    function newPage(){
+      doc.addPage();
+      y = M;
     }
-    function peekNext(){ return getLastUsed() + 1; }
-    function commitUsed(used){ localStorage.setItem(LS_KEY_CONSEC, String(used)); }
 
-    function getLogoFijo(){ return localStorage.getItem(LS_KEY_LOGO); }
-    function setLogoFijo(dataURL){ localStorage.setItem(LS_KEY_LOGO, dataURL); }
-    function clearLogoFijo(){ localStorage.removeItem(LS_KEY_LOGO); }
-
-    async function fileOrBlobToDataURL(fileOrBlob){
-      return new Promise((res,rej)=>{
-        const r = new FileReader();
-        r.onload = ()=>res(r.result);
-        r.onerror = rej;
-        r.readAsDataURL(fileOrBlob);
-      });
+    function ensure(need){
+      if (y + need > pageH - M) newPage();
     }
 
-    async function ensureDefaultLogoLoaded(){
-      if (getLogoFijo()) return;
+    function rect(x,y0,w,h,soft=false){
+      const col = soft ? strokeSoft : strokeMain;
+      doc.setDrawColor(col[0],col[1],col[2]);
+      doc.setLineWidth(soft ? 0.7 : 1);
+      doc.rect(x,y0,w,h);
+    }
+
+    function hline(y0){
+      doc.setDrawColor(strokeMain[0],strokeMain[1],strokeMain[2]);
+      doc.setLineWidth(1);
+      doc.line(M, y0, right, y0);
+    }
+
+    function textBold(t,x,y0,size=10){
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(size);
+      doc.text(String(t||''), x, y0);
+    }
+
+    function textNorm(t,x,y0,size=10){
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(size);
+      doc.text(String(t||''), x, y0);
+    }
+
+    function wrapText(txt, width, size=10){
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(size);
+      return doc.splitTextToSize(String(txt||'-'), width);
+    }
+
+    function labelValueRow(x, y0, label, value, maxWidth){
+      doc.setFont('helvetica','bold'); doc.setFontSize(9);
+      doc.text(label, x, y0);
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      const lines = doc.splitTextToSize(String(value||'-'), maxWidth);
+      doc.text(lines[0], x, y0+12);
+      return 26;
+    }
+
+    // Marco exterior sobrio
+    rect(M-6, M-6, pageW - 2*(M-6), pageH - 2*(M-6), false);
+
+    // ========== CABECERA ==========
+    const headerH = 110;
+    rect(M, y, maxW, headerH, false);
+
+    // Logo
+    if (obj.logo){
       try{
-        const res = await fetch(DEFAULT_LOGO_URL, { cache:'no-store' });
-        if (!res.ok) return;
-        const blob = await res.blob();
-        const dataUrl = await fileOrBlobToDataURL(blob);
-        setLogoFijo(dataUrl);
-      }catch(e){
-        console.warn('No se pudo cargar logo.png:', e);
+        doc.addImage(obj.logo, detectFormat(obj.logo), M+12, y+12, 150, 75);
+      }catch(e){}
+    } else {
+      rect(M+12, y+12, 150, 75, true);
+      textNorm('LOGO', M+20, y+55, 10);
+    }
+
+    const infoX = M + 175;
+    textBold(HEADER.company, infoX, y+22, 12);
+    textNorm(`Cédula Jurídica: ${HEADER.legalId}`, infoX, y+38, 9);
+    textNorm(`${HEADER.address}`, infoX, y+52, 9);
+
+    textNorm(`Ingeniería: ${obj.tecnicoBHS || '-'}`, infoX, y+68, 9);
+    textNorm(`Email: ${obj.emailBHS || '-'}   |   Tel: ${obj.phoneBHS || '-'}`, infoX, y+84, 9);
+
+    y += headerH + 14;
+
+    // ========== OT TITULO ==========
+    ensure(70);
+    const otH = 52;
+    rect(M, y, maxW, otH, false);
+
+    textBold('ORDEN DE TRABAJO (OT)', M+12, y+20, 12);
+    textBold(`OT #${String(obj.consecutivo).padStart(5,'0')}`, right-110, y+20, 12);
+
+    const sub = `Fecha: ${obj.fecha}   Hora: ${obj.horaIni}–${obj.horaFin}   Tiempo: ${obj.duracion}`;
+    doc.setFont('helvetica','normal'); doc.setFontSize(9);
+    doc.text(sub, M+12, y+40);
+
+    y += otH + 14;
+
+    // ========== CLIENTE + EQUIPO (2 columnas) ==========
+    ensure(150);
+    const twoColH = 115;
+    rect(M, y, maxW, twoColH, false);
+
+    const midX = M + maxW/2;
+    // divisor vertical
+    doc.setDrawColor(strokeMain[0],strokeMain[1],strokeMain[2]);
+    doc.setLineWidth(1);
+    doc.line(midX, y, midX, y + twoColH);
+
+    // Titles
+    textBold('DATOS DEL CLIENTE', M+12, y+18, 10);
+    textBold('DATOS DEL EQUIPO', midX+12, y+18, 10);
+
+    // Cliente (izq)
+    doc.setFont('helvetica','normal'); doc.setFontSize(10);
+    textNorm(`Cliente: ${obj.cliente || '-'}`, M+12, y+40, 10);
+    textNorm(`Responsable: ${obj.responsable || '-'}`, M+12, y+58, 10);
+    textNorm(`Correo: ${obj.correo || '-'}`, M+12, y+76, 10);
+
+    // Equipo (der)
+    textNorm(`Equipo: ${obj.equipo || '-'}`, midX+12, y+40, 10);
+    textNorm(`Marca/Modelo: ${obj.marca || '-'} / ${obj.modelo || '-'}`, midX+12, y+58, 10);
+    textNorm(`Serie/Activo: ${obj.serie || '-'} / ${obj.activo || '-'}`, midX+12, y+76, 10);
+
+    y += twoColH + 14;
+
+    // ========== SERVICIO ==========
+    ensure(90);
+    const srvH = 62;
+    rect(M, y, maxW, srvH, false);
+
+    textBold('SERVICIO', M+12, y+18, 10);
+    textNorm(`Actuación: ${obj.actuacion || '-'}`, M+12, y+38, 10);
+    textNorm(`Cantidad: ${obj.cantidad || '-'}`, M+230, y+38, 10);
+    textNorm(`Estado final: ${obj.estado || '-'}`, M+360, y+38, 10);
+
+    y += srvH + 14;
+
+    // ========== REPUESTOS / HORAS ==========
+    ensure(80);
+    const repH = 54;
+    rect(M, y, maxW, repH, false);
+
+    textBold('RECURSOS / TIEMPO', M+12, y+18, 10);
+    textNorm(`Repuestos: ${obj.repuestos || '-'}`, M+12, y+38, 10);
+    textNorm(`Horas trabajadas: ${obj.horas || '-'}`, right-170, y+38, 10);
+
+    y += repH + 14;
+
+    // ========== OBSERVACIONES ==========
+    ensure(180);
+    let obsTop = y;
+    const obsMinH = 140;
+    rect(M, obsTop, maxW, obsMinH, false);
+    textBold('OBSERVACIONES / DIAGNÓSTICO', M+12, obsTop+18, 10);
+
+    let obsTextY = obsTop + 38;
+    const obsLines = wrapText(obj.acciones || '-', maxW - 24, 10);
+
+    // Si el texto es demasiado grande, hacemos salto de página y caja nueva sin que tape bordes
+    let linesPrinted = 0;
+    const lineH = 12;
+
+    for (let i=0; i<obsLines.length; i++){
+      ensure(50);
+      if (obsTextY > (pageH - M - 60)){
+        // cerramos visualmente con una línea (sobrio) y saltamos
+        newPage();
+        rect(M-6, M-6, pageW - 2*(M-6), pageH - 2*(M-6), false);
+
+        obsTop = y;
+        rect(M, obsTop, maxW, obsMinH, false);
+        textBold('OBSERVACIONES / DIAGNÓSTICO (cont.)', M+12, obsTop+18, 10);
+        obsTextY = obsTop + 38;
+      }
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      doc.text(obsLines[i], M+12, obsTextY);
+      obsTextY += lineH;
+      linesPrinted++;
+    }
+
+    // Ajustamos el alto real de la caja para que nunca corte el texto
+    const obsRealH = Math.max(obsMinH, (obsTextY - obsTop + 12));
+    rect(M, obsTop, maxW, obsRealH, false);
+
+    y = obsTop + obsRealH + 14;
+
+    // ========== IMÁGENES ==========
+    if (obj.fotos && obj.fotos.length){
+      // Caja título imágenes
+      ensure(60);
+      const imgTitleH = 40;
+      rect(M, y, maxW, imgTitleH, false);
+      textBold('IMÁGENES (EVIDENCIA)', M+12, y+25, 10);
+      y += imgTitleH + 12;
+
+      // Cada foto en su propio bloque para evitar que se pise con líneas
+      const imgH = 280; // imagen grande pro
+      for (let i=0; i<obj.fotos.length; i++){
+        ensure(imgH + 80);
+
+        const blockH = imgH + 40;
+        rect(M, y, maxW, blockH, false);
+
+        textBold(`Foto ${i+1}`, M+12, y+18, 10);
+
+        try{
+          doc.addImage(obj.fotos[i], detectFormat(obj.fotos[i]), M+12, y+26, maxW-24, imgH);
+        }catch(e){
+          textNorm('(No se pudo insertar esta imagen)', M+12, y+50, 10);
+        }
+
+        y += blockH + 12;
       }
     }
 
-    const logoInput = document.getElementById('logoInput');
-    let logoSeleccionado = null;
+    // ========== FIRMA ==========
+    ensure(180);
+    const sigH = 150;
+    rect(M, y, maxW, sigH, false);
+    textBold('FIRMA DEL CLIENTE / CONFORMIDAD', M+12, y+18, 10);
 
-    logoInput.addEventListener('change', async (ev) => {
-      const f = ev.target.files?.[0];
-      if (!f) { logoSeleccionado = null; return; }
-      logoSeleccionado = await fileOrBlobToDataURL(f);
-      toast('Logo cargado. Presiona "Fijar logo" para guardarlo.');
-    });
+    // Caja firma
+    rect(M+12, y+30, 360, 105, true);
 
-    document.getElementById('btnFijarLogo').addEventListener('click', async () => {
-      if (!logoSeleccionado) { alert('Primero selecciona un logo.'); return; }
-      setLogoFijo(logoSeleccionado);
-      toast('Logo fijado ✅');
-    });
+    if (obj.firma){
+      try{
+        doc.addImage(obj.firma, detectFormat(obj.firma), M+20, y+36, 340, 93);
+      }catch(e){}
+    } else {
+      textNorm('Sin firma', M+24, y+85, 10);
+    }
 
-    document.getElementById('btnRestaurarLogo').addEventListener('click', async () => {
-      clearLogoFijo();
-      await ensureDefaultLogoLoaded();
-      toast('Logo por defecto restaurado ✅');
-    });
+    // líneas nombre/cedula a la derecha
+    doc.setFont('helvetica','normal'); doc.setFontSize(10);
+    doc.text('Nombre: ______________________________', M+390, y+70);
+    doc.text('Cédula: _______________________________', M+390, y+95);
 
-    const canvas = document.getElementById('sigPad');
-    const signaturePad = new window.SignaturePad(canvas, { backgroundColor: 'rgba(0,0,0,0)' });
+    y += sigH + 10;
 
-    function resizeCanvas(){
-      const ratio = Math.max(window.devicePixelRatio || 1, 1);
-      canvas.width = canvas.offsetWidth * ratio;
-      canvas.height = canvas.offsetHeight * ratio;
-      canvas.getContext('2d').setTransform(ratio,0,0,ratio,0,0);
+    // Guardado
+    const nombre = `OT_${String(obj.consecutivo).padStart(5,'0')}_${(obj.equipo||'Equipo')}_${(obj.marca||'')}.pdf`
+      .replace(/[^a-z0-9\-_\.]+/gi,'_');
+
+    const blob = doc.output('blob');
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombre;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    setTimeout(()=>URL.revokeObjectURL(url), 1500);
+
+    // ✅ consecutivo sube SOLO aquí
+    commitUsed(used);
+    document.getElementById('numReporte').value = peekNext();
+
+    toast(`PDF generado ✅  Siguiente OT: #${document.getElementById('numReporte').value}`);
+  }
+
+  document.getElementById('pdf').addEventListener('click', generarPDF_OT);
+
+  document.getElementById('limpiarForm').addEventListener('click', ()=>{
+    setTimeout(()=>{
       signaturePad.clear();
-    }
-    window.addEventListener('resize', resizeCanvas);
-    window.addEventListener('orientationchange', resizeCanvas);
-    document.getElementById('limpiarFirma').addEventListener('click', () => signaturePad.clear());
-
-    const thumbs = document.getElementById('thumbs');
-    let fotosDataURLs = [];
-    const fotosGaleria = document.getElementById('fotosGaleria');
-    const fotosCamara  = document.getElementById('fotosCamara');
-
-    document.getElementById('btnFotosGaleria').addEventListener('click', () => fotosGaleria.click());
-    document.getElementById('btnFotosCamara').addEventListener('click', () => fotosCamara.click());
-
-    fotosGaleria.addEventListener('change', (ev) => handleFotos(ev.target.files));
-    fotosCamara.addEventListener('change',  (ev) => handleFotos(ev.target.files));
-
-    async function handleFotos(fileList){
-      const files = Array.from(fileList || []);
-      if (!files.length) return;
-
-      for (const f of files){
-        const url = await fileOrBlobToDataURL(f);
-        fotosDataURLs.push(url);
-      }
-      fotosGaleria.value = '';
-      fotosCamara.value = '';
+      fotosDataURLs = [];
       refreshThumbs();
-    }
-
-    function refreshThumbs(){
-      thumbs.innerHTML = '';
-      for (const url of fotosDataURLs){
-        const img = document.createElement('img');
-        img.src = url;
-        thumbs.appendChild(img);
-      }
-    }
-
-    function pad2(n){ return (n<10?'0':'') + n; }
-    function initFechaHora(){
-      const d = new Date();
-      document.getElementById('fecha').value = d.toISOString().slice(0,10);
-      const hhmm = pad2(d.getHours()) + ':' + pad2(d.getMinutes());
-      document.getElementById('horaIni').value = hhmm;
-      document.getElementById('horaFin').value = hhmm;
-    }
-    function calcDuracion(h1, h2){
-      const [a,b] = h1.split(':').map(Number), [c,d] = h2.split(':').map(Number);
-      let m1 = a*60+b, m2 = c*60+d; if (m2 < m1) m2 += 24*60;
-      const dif = m2 - m1;
-      return Math.floor(dif/60)+':'+pad2(dif%60);
-    }
-    function get(id){ return document.getElementById(id).value.trim(); }
-
-    function formDataToObj(consecutivo){
-      const firma = signaturePad.isEmpty() ? null : signaturePad.toDataURL('image/png');
-      const dur = calcDuracion(get('horaIni'), get('horaFin'));
-      return {
-        consecutivo,
-        fecha:get('fecha'), horaIni:get('horaIni'), horaFin:get('horaFin'), duracion:dur,
-
-        cliente:get('cliente'),
-        responsable:get('responsable'),
-        correo:get('correo'),
-
-        tecnicoBHS:get('tecnicoBHS'),
-        phoneBHS:get('phoneBHS'),
-        emailBHS:get('emailBHS'),
-
-        marca:get('marca'), modelo:get('modelo'), serie:get('serie'),
-        activo:get('activo'),
-
-        actuacion:get('actuacion'),
-        cantidad:get('cantidad'),
-
-        acciones:get('acciones'),
-        repuestos:get('repuestos'),
-        horas:get('horas'),
-        estado:get('estado'),
-
-        fotos:fotosDataURLs,
-        logo:getLogoFijo(),
-        firma
-      };
-    }
-
-    function generarPDF(){
-      const used = Number(document.getElementById('numReporte').value || peekNext());
-      const obj = formDataToObj(used);
-
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ unit:'pt', format:'a4' });
-      const M = 36;
-      const pageW = doc.internal.pageSize.getWidth();
-      const pageH = doc.internal.pageSize.getHeight();
-      const right = pageW - M;
-      const maxW = pageW - 2*M;
-
-      let y = M;
-
-      function detectFormat(dataUrl){
-        if (!dataUrl || typeof dataUrl !== 'string') return 'JPEG';
-        if (dataUrl.startsWith('data:image/png')) return 'PNG';
-        if (dataUrl.startsWith('data:image/webp')) return 'WEBP';
-        if (dataUrl.startsWith('data:image/jpg') || dataUrl.startsWith('data:image/jpeg')) return 'JPEG';
-        return 'JPEG';
-      }
-
-      function lineSep(){
-        doc.setDrawColor(120,140,170);
-        doc.line(M, y, right, y);
-      }
-
-      function ensureSpace(need){
-        if (y + need > pageH - M){
-          doc.addPage();
-          y = M;
-        }
-      }
-
-      // --- CABECERA ---
-      if (obj.logo){
-        try { doc.addImage(obj.logo, detectFormat(obj.logo), M, y, 160, 80); } catch(e){}
-      }
-
-      const rightX = M + 180;
-      doc.setFont('helvetica','bold'); doc.setFontSize(12);
-      doc.text(HEADER.company, rightX, y+16);
-
-      doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      doc.text(HEADER.legalId, rightX, y+34);
-      doc.text(HEADER.address, rightX, y+50);
-
-      doc.text(`Ingeniería: ${obj.tecnicoBHS || '-'}`, rightX, y+66);
-      doc.text(`Email: ${obj.emailBHS || '-'}`, rightX, y+82);
-      doc.text(`Tel: ${obj.phoneBHS || '-'}`, rightX, y+98);
-
-      y += 130;
-      lineSep();
-
-      // --- OT + FECHA/HORAS ---
-      y += 22;
-      doc.setFont('helvetica','bold'); doc.setFontSize(12);
-      doc.text(`Num. Orden de trabajo: ${String(obj.consecutivo).padStart(5,'0')}`, M, y);
-
-      y += 18;
-      doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      doc.text(`Fecha: ${obj.fecha}`, M, y);
-      doc.text(`Hora Inicio: ${obj.horaIni}`, M+180, y);
-      doc.text(`Hora Fin: ${obj.horaFin}`, M+340, y);
-      doc.text(`Tiempo: ${obj.duracion}`, right, y, { align:'right' });
-
-      y += 14;
-      lineSep();
-
-      // --- DATOS CLIENTE ---
-      y += 20;
-      doc.setFont('helvetica','bold'); doc.setFontSize(11);
-      doc.text('DATOS DEL CLIENTE', M, y);
-      y += 14;
-      doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      doc.text(`Cliente: ${obj.cliente || '-'}`, M, y);
-      y += 14;
-      doc.text(`Responsable en sitio: ${obj.responsable || '-'}`, M, y);
-      y += 14;
-      doc.text(`Correo: ${obj.correo || '-'}`, M, y);
-
-      y += 10;
-      lineSep();
-
-      // --- DATOS EQUIPO ---
-      y += 20;
-      doc.setFont('helvetica','bold'); doc.setFontSize(11);
-      doc.text('DATOS DEL EQUIPO', M, y);
-      y += 14;
-      doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      doc.text(`Marca: ${obj.marca || '-'}`, M, y);
-      doc.text(`Modelo: ${obj.modelo || '-'}`, M+220, y);
-      y += 14;
-      doc.text(`Serie: ${obj.serie || '-'}`, M, y);
-      doc.text(`Activo: ${obj.activo || '-'}`, M+220, y);
-
-      y += 10;
-      lineSep();
-
-      // --- ACTUACIÓN / CANTIDAD + CIERRE ---
-      y += 20;
-      doc.setFont('helvetica','bold'); doc.setFontSize(11);
-      doc.text('SERVICIO', M, y);
-      y += 14;
-      doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      doc.text(`Actuación: ${obj.actuacion || '-'}`, M, y);
-      doc.text(`Cantidad: ${obj.cantidad || '-'}`, M+380, y);
-
-      y += 14;
-      doc.text(`Repuestos: ${obj.repuestos || '-'}`, M, y);
-      y += 14;
-      doc.text(`Horas trabajadas: ${obj.horas || '-'}`, M, y);
-      doc.text(`Estado final: ${obj.estado || '-'}`, M+220, y);
-
-      y += 10;
-      lineSep();
-
-      // --- OBSERVACIONES ---
-      y += 20;
-      doc.setFont('helvetica','bold'); doc.setFontSize(11);
-      doc.text('OBSERVACIONES / DIAGNÓSTICO', M, y);
-      y += 14;
-      doc.setFont('helvetica','normal'); doc.setFontSize(10);
-
-      const obsLines = doc.splitTextToSize(obj.acciones || '-', maxW);
-      for (const line of obsLines){
-        ensureSpace(14);
-        doc.text(line, M, y);
-        y += 12;
-      }
-
-      // --- FOTOS ---
-      if (obj.fotos && obj.fotos.length){
-        ensureSpace(60);
-        y += 10;
-        lineSep();
-        y += 20;
-
-        doc.setFont('helvetica','bold'); doc.setFontSize(11);
-        doc.text('IMÁGENES', M, y);
-        y += 10;
-
-        const imgH = 320;
-        const gap = 16;
-
-        for (let i=0; i<obj.fotos.length; i++){
-          ensureSpace(imgH + 60);
-
-          doc.setFont('helvetica','bold'); doc.setFontSize(10);
-          doc.text(`Foto ${i+1}`, M, y+12);
-
-          try{
-            doc.addImage(obj.fotos[i], detectFormat(obj.fotos[i]), M, y+18, maxW, imgH);
-          }catch(e){
-            doc.setFont('helvetica','normal'); doc.setFontSize(9);
-            doc.text('(No se pudo insertar esta imagen)', M, y+30);
-          }
-
-          y += (imgH + 18 + gap);
-        }
-      }
-
-      // --- FIRMA ---
-      ensureSpace(190);
-      doc.setFont('helvetica','bold'); doc.setFontSize(11);
-      doc.text('Firma del cliente / conformidad', M, y);
-      y += 10;
-      doc.setDrawColor(80,100,140);
-      doc.rect(M, y, 360, 130);
-
-      if (obj.firma){
-        try { doc.addImage(obj.firma, detectFormat(obj.firma), M+10, y+10, 340, 110); } catch(e){}
-      }
-
-      // Archivo
-      const nombre = `OT_${String(obj.consecutivo).padStart(5,'0')}_${(obj.marca||'Equipo')}_${(obj.modelo||'')}.pdf`
-        .replace(/[^a-z0-9\-_\.]+/gi,'_');
-
-      const blob = doc.output('blob');
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = nombre;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(()=>URL.revokeObjectURL(url), 1500);
-
-      commitUsed(used);
-      document.getElementById('numReporte').value = peekNext();
-      toast(`PDF generado. Siguiente: #${document.getElementById('numReporte').value}`);
-    }
-
-    document.getElementById('pdf').addEventListener('click', generarPDF);
-
-    document.getElementById('limpiarForm').addEventListener('click', ()=>{
-      setTimeout(()=>{
-        signaturePad.clear();
-        fotosDataURLs = [];
-        refreshThumbs();
-        initFechaHora();
-        document.getElementById('numReporte').value = peekNext();
-      }, 0);
-    });
-
-    function toast(msg){
-      const d=document.createElement('div');
-      d.textContent=msg;
-      d.style.cssText='position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#101a35;border:1px solid #253055;padding:10px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:9999;color:#ebf0ff;';
-      document.body.appendChild(d);
-      setTimeout(()=>d.remove(),2200);
-    }
-
-    async function init(){
-      resizeCanvas();
       initFechaHora();
-      await ensureDefaultLogoLoaded();
       document.getElementById('numReporte').value = peekNext();
-      document.getElementById('tecnicoBHS').value = 'Ing. Juan Carlos A';
-    }
-    init();
-  </script>
+    }, 0);
+  });
+
+  function toast(msg){
+    const d=document.createElement('div');
+    d.textContent=msg;
+    d.style.cssText='position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#101a35;border:1px solid #253055;padding:10px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:9999;color:#ebf0ff;';
+    document.body.appendChild(d);
+    setTimeout(()=>d.remove(),2200);
+  }
+
+  async function init(){
+    resizeCanvas();
+    initFechaHora();
+    await ensureDefaultLogoLoaded();
+    document.getElementById('numReporte').value = peekNext();
+    document.getElementById('tecnicoBHS').value = 'Ing. Juan Carlos A';
+  }
+  init();
+</script>
 </body>
 </html>
