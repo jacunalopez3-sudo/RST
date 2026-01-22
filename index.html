@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Reporte Técnico – Formato OT (BHS)</title>
+  <title>Reporte Técnico – Equipos Médicos (simple)</title>
   <meta name="description" content="Reporte técnico (PDF, consecutivo, firma y fotos) sin Service Worker." />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -82,7 +82,7 @@
 
 <body>
   <header>
-    <div class="wrap"><h1>Reporte Técnico – Formato OT (BHS)</h1></div>
+    <div class="wrap"><h1>Reportes Técnicos – Versión Simple</h1></div>
   </header>
 
   <main class="wrap">
@@ -150,14 +150,10 @@
 
           <h3 class="muted">Equipo atendido</h3>
           <div class="grid-4">
-            <div><label>Equipo</label><input type="text" id="equipo" required placeholder="Ej. Monitor de signos vitales" /></div>
             <div><label>Marca</label><input type="text" id="marca" required /></div>
             <div><label>Modelo</label><input type="text" id="modelo" required /></div>
             <div><label>N° de serie</label><input type="text" id="serie" required /></div>
-          </div>
-          <div class="grid-2">
             <div><label>Activo</label><input type="text" id="activo" /></div>
-            <div><label>Ubicación / Servicio (opcional)</label><input type="text" id="ubicacion" placeholder="Ej. Sala de procedimientos" /></div>
           </div>
 
           <div class="grid-2">
@@ -223,7 +219,7 @@
           </div>
 
           <div class="btns">
-            <button type="button" class="success" id="pdf">Generar PDF (Formato OT)</button>
+            <button type="button" class="success" id="pdf">Generar PDF</button>
             <button type="reset" class="danger" id="limpiarForm">Limpiar formulario</button>
           </div>
 
@@ -237,7 +233,6 @@
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@5.0.10/dist/signature_pad.umd.min.js"></script>
 
   <script>
-    /***************** CONFIG *****************/
     const HEADER = {
       company:   'Bennu Healthcare Solutions',
       legalId:   '3-101804878',
@@ -250,7 +245,6 @@
     const LS_KEY_CONSEC = 'reportes_simple_consecutivo_last_used';
     const LS_KEY_LOGO   = 'reportes_simple_logo_fijo';
 
-    /***************** CONSECTUIVO *****************/
     function getLastUsed(){
       const raw = localStorage.getItem(LS_KEY_CONSEC);
       if (!raw) return (CONSEC_START - 1);
@@ -260,7 +254,6 @@
     function peekNext(){ return getLastUsed() + 1; }
     function commitUsed(used){ localStorage.setItem(LS_KEY_CONSEC, String(used)); }
 
-    /***************** LOGO FIJO *****************/
     function getLogoFijo(){ return localStorage.getItem(LS_KEY_LOGO); }
     function setLogoFijo(dataURL){ localStorage.setItem(LS_KEY_LOGO, dataURL); }
     function clearLogoFijo(){ localStorage.removeItem(LS_KEY_LOGO); }
@@ -309,7 +302,6 @@
       toast('Logo por defecto restaurado ✅');
     });
 
-    /***************** FIRMA *****************/
     const canvas = document.getElementById('sigPad');
     const signaturePad = new window.SignaturePad(canvas, { backgroundColor: 'rgba(0,0,0,0)' });
 
@@ -324,7 +316,6 @@
     window.addEventListener('orientationchange', resizeCanvas);
     document.getElementById('limpiarFirma').addEventListener('click', () => signaturePad.clear());
 
-    /***************** FOTOS *****************/
     const thumbs = document.getElementById('thumbs');
     let fotosDataURLs = [];
     const fotosGaleria = document.getElementById('fotosGaleria');
@@ -358,7 +349,6 @@
       }
     }
 
-    /***************** UTIL *****************/
     function pad2(n){ return (n<10?'0':'') + n; }
     function initFechaHora(){
       const d = new Date();
@@ -390,12 +380,8 @@
         phoneBHS:get('phoneBHS'),
         emailBHS:get('emailBHS'),
 
-        equipo:get('equipo'),
-        marca:get('marca'),
-        modelo:get('modelo'),
-        serie:get('serie'),
+        marca:get('marca'), modelo:get('modelo'), serie:get('serie'),
         activo:get('activo'),
-        ubicacion:get('ubicacion'),
 
         actuacion:get('actuacion'),
         cantidad:get('cantidad'),
@@ -411,52 +397,20 @@
       };
     }
 
-    /***************** PDF - FORMATO OT PROFESIONAL *****************/
-    function generarPDF_OT(){
+    function generarPDF(){
       const used = Number(document.getElementById('numReporte').value || peekNext());
       const obj = formDataToObj(used);
 
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ unit:'pt', format:'a4' });
-
+      const M = 36;
       const pageW = doc.internal.pageSize.getWidth();
       const pageH = doc.internal.pageSize.getHeight();
+      const right = pageW - M;
+      const maxW = pageW - 2*M;
 
-      // Márgenes y estilo
-      const M = 36;
-      const R = pageW - M;
-      const B = pageH - M;
-      const stroke = { r: 43, g: 52, b: 69 };     // #2b3445
-      const light  = { r: 151, g: 166, b: 191 };  // #97a6bf
-      const text   = { r: 17, g: 24, b: 39 };     // #111827
+      let y = M;
 
-      function setStroke(s=stroke, w=1){
-        doc.setDrawColor(s.r,s.g,s.b);
-        doc.setLineWidth(w);
-      }
-      function rect(x,y,w,h, lw=1){
-        setStroke(stroke, lw);
-        doc.rect(x,y,w,h);
-      }
-      function line(x1,y1,x2,y2,lw=1){
-        setStroke(stroke, lw);
-        doc.line(x1,y1,x2,y2);
-      }
-      function txt(x,y,s, size=10, bold=false, col=text){
-        doc.setTextColor(col.r,col.g,col.b);
-        doc.setFont('helvetica', bold?'bold':'normal');
-        doc.setFontSize(size);
-        doc.text(String(s || ''), x, y);
-      }
-      function txtR(x,y,s, size=10, bold=false, col=text){
-        doc.setTextColor(col.r,col.g,col.b);
-        doc.setFont('helvetica', bold?'bold':'normal');
-        doc.setFontSize(size);
-        doc.text(String(s || ''), x, y, { align:'right' });
-      }
-      function label(x,y,s){
-        txt(x,y,s,8,false,{r:77,g:95,b:122});
-      }
       function detectFormat(dataUrl){
         if (!dataUrl || typeof dataUrl !== 'string') return 'JPEG';
         if (dataUrl.startsWith('data:image/png')) return 'PNG';
@@ -465,204 +419,205 @@
         return 'JPEG';
       }
 
-      // Wrap seguro dentro de ancho + alto (para que no tape líneas)
-      function wrapToLines(text, maxWidth, fontSize=10, bold=false){
-        doc.setFont('helvetica', bold?'bold':'normal');
-        doc.setFontSize(fontSize);
-        const t = String(text || '-');
-        return doc.splitTextToSize(t, maxWidth);
+      function lineSep(){
+        doc.setDrawColor(120,140,170);
+        doc.line(M, y, right, y);
       }
-      function drawFieldBox(x,y,w,h, title, valueText, opts={}){
-        // Caja + título pequeño + valor con wrap dentro
-        rect(x,y,w,h,1);
-        label(x+8, y+12, title);
-        const innerX = x+8;
-        const innerY = y+26;
-        const innerW = w-16;
-        const innerH = h-34;
-        const lines = wrapToLines(valueText || '-', innerW, 10, false);
 
-        let yy = innerY;
-        const lineH = 12;
-        const maxLines = Math.max(1, Math.floor(innerH/lineH));
-        for (let i=0;i<Math.min(lines.length, maxLines);i++){
-          txt(innerX, yy, lines[i], 10, false);
-          yy += lineH;
-        }
-        if (lines.length > maxLines){
-          txt(innerX, y+h-8, '…', 12, true);
+      function ensureSpace(need){
+        if (y + need > pageH - M){
+          doc.addPage();
+          y = M;
         }
       }
 
-      function frame(){
-        // marco sobrio por página
-        setStroke(stroke,1);
-        doc.rect(M-8, M-8, (R-(M-8)), (B-(M-8)));
-      }
-
-      let y = M;
-      frame();
-
-      /************** HEADER **************/
-      const headerH = 110;
-      rect(M, y, R-M, headerH, 1);
-
-      // Logo placeholder area
-      const logoX = M+10;
-      const logoY = y+14;
-      const logoW = 140;
-      const logoH = 70;
-
-      rect(logoX, logoY, logoW, logoH, 0.8);
+      // --- CABECERA ---
       if (obj.logo){
-        try { doc.addImage(obj.logo, detectFormat(obj.logo), logoX+2, logoY+2, logoW-4, logoH-4); } catch(e){}
-      } else {
-        label(logoX+50, logoY+38, 'LOGO');
+        try { doc.addImage(obj.logo, detectFormat(obj.logo), M, y, 160, 80); } catch(e){}
       }
 
-      const infoX = logoX + logoW + 12;
-      txt(infoX, y+24, HEADER.company, 12, true);
-      txt(infoX, y+40, `Cédula Jurídica: ${HEADER.legalId}`, 9, false);
-      txt(infoX, y+54, HEADER.address, 9, false);
-      txt(infoX, y+70, `Ingeniería: ${obj.tecnicoBHS || '-'}`, 9, false);
-      txt(infoX, y+86, `Email: ${obj.emailBHS || '-'}   |   Tel: ${obj.phoneBHS || '-'}`, 9, false);
+      const rightX = M + 180;
+      doc.setFont('helvetica','bold'); doc.setFontSize(12);
+      doc.text(HEADER.company, rightX, y+16);
 
-      y += headerH + 10;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      doc.text(HEADER.legalId, rightX, y+34);
+      doc.text(HEADER.address, rightX, y+50);
 
-      /************** OT ROW **************/
-      const otH = 48;
-      rect(M, y, R-M, otH, 1);
+      doc.text(`Ingeniería: ${obj.tecnicoBHS || '-'}`, rightX, y+66);
+      doc.text(`Email: ${obj.emailBHS || '-'}`, rightX, y+82);
+      doc.text(`Tel: ${obj.phoneBHS || '-'}`, rightX, y+98);
 
-      txt(M+10, y+18, 'ORDEN DE TRABAJO (OT)', 12, true);
-      txtR(R-10, y+18, `OT #${String(obj.consecutivo).padStart(5,'0')}`, 12, true);
-      const rango = `${obj.horaIni || '--:--'}–${obj.horaFin || '--:--'}`;
-      txtR(R-10, y+36, `Fecha: ${obj.fecha || '-'}   Hora: ${rango}   Tiempo: ${obj.duracion || '-'}`, 9, false);
+      y += 130;
+      lineSep();
 
-      y += otH + 10;
+      // --- OT + FECHA/HORAS ---
+      y += 22;
+      doc.setFont('helvetica','bold'); doc.setFontSize(12);
+      doc.text(`Num. Orden de trabajo: ${String(obj.consecutivo).padStart(5,'0')}`, M, y);
 
-      /************** CLIENTE + EQUIPO (2 columnas) **************/
-      const secH = 132;
-      rect(M, y, R-M, secH, 1);
-      const mid = M + (R-M)/2;
-      line(mid, y, mid, y+secH, 1);
+      y += 18;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      doc.text(`Fecha: ${obj.fecha}`, M, y);
+      doc.text(`Hora Inicio: ${obj.horaIni}`, M+180, y);
+      doc.text(`Hora Fin: ${obj.horaFin}`, M+340, y);
+      doc.text(`Tiempo: ${obj.duracion}`, right, y, { align:'right' });
 
-      // Titles
-      txt(M+10, y+18, 'DATOS DEL CLIENTE', 9, true, {r:31,g:41,b:55});
-      txt(mid+10, y+18, 'DATOS DEL EQUIPO', 9, true, {r:31,g:41,b:55});
+      y += 14;
+      lineSep();
 
-      // Left fields
-      const leftX = M+10;
-      const leftW = (mid - M) - 20;
-      drawFieldBox(leftX, y+24, leftW, 34, 'Cliente', obj.cliente || '-');
-      drawFieldBox(leftX, y+62, leftW, 34, 'Responsable en sitio', obj.responsable || '-');
-      drawFieldBox(leftX, y+100, leftW, 24, 'Correo', obj.correo || '-');
+      // --- DATOS CLIENTE ---
+      y += 20;
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text('DATOS DEL CLIENTE', M, y);
+      y += 14;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      doc.text(`Cliente: ${obj.cliente || '-'}`, M, y);
+      y += 14;
+      doc.text(`Responsable en sitio: ${obj.responsable || '-'}`, M, y);
+      y += 14;
+      doc.text(`Correo: ${obj.correo || '-'}`, M, y);
 
-      // Right fields
-      const rightX = mid+10;
-      const rightW = (R - mid) - 20;
-      drawFieldBox(rightX, y+24, rightW, 34, 'Equipo', obj.equipo || '-');
-      drawFieldBox(rightX, y+62, rightW, 34, 'Marca / Modelo', `${obj.marca || '-'} / ${obj.modelo || '-'}`);
-      drawFieldBox(rightX, y+100, rightW, 24, 'Serie / Activo', `${obj.serie || '-'} / ${obj.activo || '-'}`);
+      y += 10;
+      lineSep();
 
-      y += secH + 10;
+      // --- DATOS EQUIPO ---
+      y += 20;
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text('DATOS DEL EQUIPO', M, y);
+      y += 14;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      doc.text(`Marca: ${obj.marca || '-'}`, M, y);
+      doc.text(`Modelo: ${obj.modelo || '-'}`, M+220, y);
+      y += 14;
+      doc.text(`Serie: ${obj.serie || '-'}`, M, y);
+      doc.text(`Activo: ${obj.activo || '-'}`, M+220, y);
 
-      /************** SERVICIO **************/
-      const srvH = 66;
-      rect(M, y, R-M, srvH, 1);
-      txt(M+10, y+18, 'SERVICIO', 9, true, {r:31,g:41,b:55});
+      y += 10;
+      lineSep();
 
-      // 3 columnas internas
-      const col1 = M+10;
-      const colW = (R-M-20)/3;
-      drawFieldBox(col1,          y+22, colW-6, 40, 'Actuación', obj.actuacion || '-');
-      drawFieldBox(col1+colW,     y+22, colW-6, 40, 'Cantidad', obj.cantidad || '-');
-      drawFieldBox(col1+2*colW,   y+22, colW-6, 40, 'Estado final', obj.estado || '-');
+      // --- ACTUACIÓN / CANTIDAD + CIERRE ---
+      y += 20;
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text('SERVICIO', M, y);
+      y += 14;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      doc.text(`Actuación: ${obj.actuacion || '-'}`, M, y);
+      doc.text(`Cantidad: ${obj.cantidad || '-'}`, M+380, y);
 
-      y += srvH + 10;
+      y += 14;
+      doc.text(`Repuestos: ${obj.repuestos || '-'}`, M, y);
+      y += 14;
+      doc.text(`Horas trabajadas: ${obj.horas || '-'}`, M, y);
+      doc.text(`Estado final: ${obj.estado || '-'}`, M+220, y);
 
-      /************** DETALLES (Repuestos / Horas / Ubicación) **************/
-      const detH = 70;
-      rect(M, y, R-M, detH, 1);
-      txt(M+10, y+18, 'DETALLES', 9, true, {r:31,g:41,b:55});
+      y += 10;
+      lineSep();
 
-      const detColW = (R-M-20)/2;
-      drawFieldBox(M+10,          y+22, detColW-6, 44, 'Repuestos utilizados', obj.repuestos || '-');
-      drawFieldBox(M+10+detColW,  y+22, detColW-6, 44, 'Horas trabajadas / Ubicación', `${obj.horas || '-'} h  |  ${obj.ubicacion || '-'}`);
+      // --- OBSERVACIONES ---
+      y += 20;
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text('OBSERVACIONES / DIAGNÓSTICO', M, y);
+      y += 14;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
 
-      y += detH + 10;
-
-      /************** OBSERVACIONES (auto-ajusta alto y páginas) **************/
-      // Calcula alto necesario para observaciones con wrap, pero lo limita por página
-      const obsTitleH = 18;
-      const obsPadTop = 8;
-      const obsPadX = 10;
-      const maxObsW = (R-M) - 2*obsPadX;
-      const obsLines = wrapToLines(obj.acciones || '-', maxObsW, 10, false);
-      const lineH = 12;
-      const obsTextH = Math.max(1, obsLines.length) * lineH;
-      let obsBoxH = obsTitleH + obsPadTop + obsTextH + 12; // +12 para margen inferior
-
-      // espacio mínimo para firma al final de la página si no hay fotos
-      const reserveBottom = 170;
-
-      function newPage(){
-        doc.addPage();
-        frame();
-        y = M;
+      const obsLines = doc.splitTextToSize(obj.acciones || '-', maxW);
+      for (const line of obsLines){
+        ensureSpace(14);
+        doc.text(line, M, y);
+        y += 12;
       }
 
-      // Si no cabe el bloque completo, lo partimos por páginas
-      function drawObsBlock(lines){
-        // caja con altura según líneas
-        const neededH = obsTitleH + obsPadTop + (lines.length*lineH) + 12;
-        rect(M, y, R-M, neededH, 1);
-        txt(M+10, y+14, 'OBSERVACIONES / DIAGNÓSTICO', 9, true, {r:31,g:41,b:55});
-
-        let yy = y + 28;
-        doc.setFont('helvetica','normal');
-        doc.setFontSize(10);
-        doc.setTextColor(text.r,text.g,text.b);
-        for (const ln of lines){
-          txt(M+10, yy, ln, 10, false);
-          yy += lineH;
-        }
-        y += neededH + 10;
-      }
-
-      // Cuántas líneas caben en la página restante (dejando reserva)
-      function linesThatFit(){
-        const available = (B - reserveBottom) - y;
-        const availInside = available - (obsTitleH + obsPadTop + 12);
-        return Math.max(3, Math.floor(availInside / lineH));
-      }
-
-      let idx = 0;
-      while (idx < obsLines.length){
-        const fit = linesThatFit();
-        const chunk = obsLines.slice(idx, idx+fit);
-        // Si no cabe ni el mínimo, nueva página
-        const minNeeded = obsTitleH + obsPadTop + (3*lineH) + 12;
-        if (y + minNeeded > (B - reserveBottom)) newPage();
-        drawObsBlock(chunk);
-        idx += fit;
-        if (idx < obsLines.length) newPage();
-      }
-      if (obsLines.length === 0){
-        if (y + 80 > (B - reserveBottom)) newPage();
-        drawObsBlock(['-']);
-      }
-
-      /************** IMÁGENES (2 por página, con marcos; nunca tapa líneas) **************/
+      // --- FOTOS ---
       if (obj.fotos && obj.fotos.length){
-        const imgsTitleH = 22;
-        const boxPad = 10;
-        const imgsBoxH = 250;
+        ensureSpace(60);
+        y += 10;
+        lineSep();
+        y += 20;
 
-        function drawImagesPage(images){
-          if (y + imgsTitleH + imgsBoxH + 10 > B - 170) newPage();
+        doc.setFont('helvetica','bold'); doc.setFontSize(11);
+        doc.text('IMÁGENES', M, y);
+        y += 10;
 
-          rect(M, y, R-M, imgsTitleH + imgsBoxH, 1);
-          txt(M+10, y+16, 'IMÁGENES', 9, true, {r:31,g:41,b:55});
+        const imgH = 320;
+        const gap = 16;
 
-          const innerX = M + boxPad;
-          const innerY = y + imgsTitleH +
+        for (let i=0; i<obj.fotos.length; i++){
+          ensureSpace(imgH + 60);
+
+          doc.setFont('helvetica','bold'); doc.setFontSize(10);
+          doc.text(`Foto ${i+1}`, M, y+12);
+
+          try{
+            doc.addImage(obj.fotos[i], detectFormat(obj.fotos[i]), M, y+18, maxW, imgH);
+          }catch(e){
+            doc.setFont('helvetica','normal'); doc.setFontSize(9);
+            doc.text('(No se pudo insertar esta imagen)', M, y+30);
+          }
+
+          y += (imgH + 18 + gap);
+        }
+      }
+
+      // --- FIRMA ---
+      ensureSpace(190);
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text('Firma del cliente / conformidad', M, y);
+      y += 10;
+      doc.setDrawColor(80,100,140);
+      doc.rect(M, y, 360, 130);
+
+      if (obj.firma){
+        try { doc.addImage(obj.firma, detectFormat(obj.firma), M+10, y+10, 340, 110); } catch(e){}
+      }
+
+      // Archivo
+      const nombre = `OT_${String(obj.consecutivo).padStart(5,'0')}_${(obj.marca||'Equipo')}_${(obj.modelo||'')}.pdf`
+        .replace(/[^a-z0-9\-_\.]+/gi,'_');
+
+      const blob = doc.output('blob');
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nombre;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 1500);
+
+      commitUsed(used);
+      document.getElementById('numReporte').value = peekNext();
+      toast(`PDF generado. Siguiente: #${document.getElementById('numReporte').value}`);
+    }
+
+    document.getElementById('pdf').addEventListener('click', generarPDF);
+
+    document.getElementById('limpiarForm').addEventListener('click', ()=>{
+      setTimeout(()=>{
+        signaturePad.clear();
+        fotosDataURLs = [];
+        refreshThumbs();
+        initFechaHora();
+        document.getElementById('numReporte').value = peekNext();
+      }, 0);
+    });
+
+    function toast(msg){
+      const d=document.createElement('div');
+      d.textContent=msg;
+      d.style.cssText='position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#101a35;border:1px solid #253055;padding:10px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:9999;color:#ebf0ff;';
+      document.body.appendChild(d);
+      setTimeout(()=>d.remove(),2200);
+    }
+
+    async function init(){
+      resizeCanvas();
+      initFechaHora();
+      await ensureDefaultLogoLoaded();
+      document.getElementById('numReporte').value = peekNext();
+      document.getElementById('tecnicoBHS').value = 'Ing. Juan Carlos A';
+    }
+    init();
+  </script>
+</body>
+</html>
