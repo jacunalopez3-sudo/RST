@@ -538,8 +538,8 @@
     const otH = 52;
     rect(M, y, maxW, otH, false);
 
-    textBold('ORDEN DE TRABAJO (OT)', M+12, y+20, 12);
-    textBold(`OT #${String(obj.consecutivo).padStart(5,'0')}`, right-110, y+20, 12);
+    textBold('REPORTE DE SERVICIO', M+12, y+20, 12);
+    textBold(`R#${String(obj.consecutivo).padStart(5,'0')}`, right-110, y+20, 12);
 
     const sub = `Fecha: ${obj.fecha}   Hora: ${obj.horaIni}–${obj.horaFin}   Tiempo: ${obj.duracion}`;
     doc.setFont('helvetica','normal'); doc.setFontSize(9);
