@@ -91,7 +91,6 @@
         <h2>Nuevo reporte</h2>
 
         <form id="reporteForm">
-          <!-- Encabezado empresa (menú de ingenieros) -->
           <div class="subhead">Datos empresa (BHS)</div>
           <div class="grid-3">
             <div>
@@ -199,7 +198,6 @@
           <input type="file" id="fotosCamara" accept="image/*" capture="environment" multiple class="hidden" />
           <div id="thumbs" class="thumbs"></div>
 
-          <!-- LOGO seleccionable + fijo -->
           <div class="grid-2">
             <div>
               <label>Logo de empresa</label>
@@ -231,13 +229,10 @@
     </div>
   </main>
 
-  <!-- jsPDF (UMD) -->
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-  <!-- Signature Pad -->
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@5.0.10/dist/signature_pad.umd.min.js"></script>
 
   <script>
-    /*************** Config ***************/
     const HEADER = {
       company:   'Bennu Healthcare Solutions',
       legalId:   '3-101804878',
@@ -250,7 +245,6 @@
     const LS_KEY_CONSEC = 'reportes_simple_consecutivo_last_used';
     const LS_KEY_LOGO   = 'reportes_simple_logo_fijo';
 
-    /*************** Consecutivo ***************/
     function getLastUsed(){
       const raw = localStorage.getItem(LS_KEY_CONSEC);
       if (!raw) return (CONSEC_START - 1);
@@ -260,7 +254,6 @@
     function peekNext(){ return getLastUsed() + 1; }
     function commitUsed(used){ localStorage.setItem(LS_KEY_CONSEC, String(used)); }
 
-    /*************** Logo fijo ***************/
     function getLogoFijo(){ return localStorage.getItem(LS_KEY_LOGO); }
     function setLogoFijo(dataURL){ localStorage.setItem(LS_KEY_LOGO, dataURL); }
     function clearLogoFijo(){ localStorage.removeItem(LS_KEY_LOGO); }
@@ -287,7 +280,6 @@
       }
     }
 
-    // Selección de logo
     const logoInput = document.getElementById('logoInput');
     let logoSeleccionado = null;
 
@@ -310,7 +302,6 @@
       toast('Logo por defecto restaurado ✅');
     });
 
-    /*************** Firma ***************/
     const canvas = document.getElementById('sigPad');
     const signaturePad = new window.SignaturePad(canvas, { backgroundColor: 'rgba(0,0,0,0)' });
 
@@ -325,7 +316,6 @@
     window.addEventListener('orientationchange', resizeCanvas);
     document.getElementById('limpiarFirma').addEventListener('click', () => signaturePad.clear());
 
-    /*************** Fotos ***************/
     const thumbs = document.getElementById('thumbs');
     let fotosDataURLs = [];
     const fotosGaleria = document.getElementById('fotosGaleria');
@@ -359,7 +349,6 @@
       }
     }
 
-    /*************** Utilidades ***************/
     function pad2(n){ return (n<10?'0':'') + n; }
     function initFechaHora(){
       const d = new Date();
@@ -382,6 +371,7 @@
       return {
         consecutivo,
         fecha:get('fecha'), horaIni:get('horaIni'), horaFin:get('horaFin'), duracion:dur,
+
         cliente:get('cliente'),
         responsable:get('responsable'),
         correo:get('correo'),
@@ -392,16 +382,21 @@
 
         marca:get('marca'), modelo:get('modelo'), serie:get('serie'),
         activo:get('activo'),
-        actuacion:get('actuacion'), cantidad:get('cantidad'),
+
+        actuacion:get('actuacion'),
+        cantidad:get('cantidad'),
+
         acciones:get('acciones'),
-        repuestos:get('repuestos'), horas:get('horas'), estado:get('estado'),
+        repuestos:get('repuestos'),
+        horas:get('horas'),
+        estado:get('estado'),
+
         fotos:fotosDataURLs,
         logo:getLogoFijo(),
         firma
       };
     }
 
-    /*************** PDF ***************/
     function generarPDF(){
       const used = Number(document.getElementById('numReporte').value || peekNext());
       const obj = formDataToObj(used);
@@ -409,18 +404,34 @@
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ unit:'pt', format:'a4' });
       const M = 36;
+      const pageW = doc.internal.pageSize.getWidth();
+      const pageH = doc.internal.pageSize.getHeight();
+      const right = pageW - M;
+      const maxW = pageW - 2*M;
+
       let y = M;
 
-      // Helper: detecta formato real del dataURL (PNG/JPEG)
       function detectFormat(dataUrl){
         if (!dataUrl || typeof dataUrl !== 'string') return 'JPEG';
         if (dataUrl.startsWith('data:image/png')) return 'PNG';
-        if (dataUrl.startsWith('data:image/webp')) return 'WEBP'; // por si acaso
+        if (dataUrl.startsWith('data:image/webp')) return 'WEBP';
         if (dataUrl.startsWith('data:image/jpg') || dataUrl.startsWith('data:image/jpeg')) return 'JPEG';
         return 'JPEG';
       }
 
-      // Logo
+      function lineSep(){
+        doc.setDrawColor(120,140,170);
+        doc.line(M, y, right, y);
+      }
+
+      function ensureSpace(need){
+        if (y + need > pageH - M){
+          doc.addPage();
+          y = M;
+        }
+      }
+
+      // --- CABECERA ---
       if (obj.logo){
         try { doc.addImage(obj.logo, detectFormat(obj.logo), M, y, 160, 80); } catch(e){}
       }
@@ -438,9 +449,9 @@
       doc.text(`Tel: ${obj.phoneBHS || '-'}`, rightX, y+98);
 
       y += 130;
-      doc.setDrawColor(120,140,170);
-      doc.line(M, y, 595-M, y);
+      lineSep();
 
+      // --- OT + FECHA/HORAS ---
       y += 22;
       doc.setFont('helvetica','bold'); doc.setFontSize(12);
       doc.text(`Num. Orden de trabajo: ${String(obj.consecutivo).padStart(5,'0')}`, M, y);
@@ -450,57 +461,96 @@
       doc.text(`Fecha: ${obj.fecha}`, M, y);
       doc.text(`Hora Inicio: ${obj.horaIni}`, M+180, y);
       doc.text(`Hora Fin: ${obj.horaFin}`, M+340, y);
-      doc.text(`Tiempo: ${obj.duracion}`, 595-M, y, { align:'right' });
+      doc.text(`Tiempo: ${obj.duracion}`, right, y, { align:'right' });
 
-      y += 18;
-      doc.setDrawColor(120,140,170);
-      doc.line(M, y, 595-M, y);
+      y += 14;
+      lineSep();
 
-      y += 18;
+      // --- DATOS CLIENTE ---
+      y += 20;
       doc.setFont('helvetica','bold'); doc.setFontSize(11);
-      doc.text('Observaciones / diagnóstico:', M, y);
+      doc.text('DATOS DEL CLIENTE', M, y);
       y += 14;
       doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      const obsLines = doc.splitTextToSize(obj.acciones || '-', 595 - 2*M);
+      doc.text(`Cliente: ${obj.cliente || '-'}`, M, y);
+      y += 14;
+      doc.text(`Responsable en sitio: ${obj.responsable || '-'}`, M, y);
+      y += 14;
+      doc.text(`Correo: ${obj.correo || '-'}`, M, y);
+
+      y += 10;
+      lineSep();
+
+      // --- DATOS EQUIPO ---
+      y += 20;
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text('DATOS DEL EQUIPO', M, y);
+      y += 14;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      doc.text(`Marca: ${obj.marca || '-'}`, M, y);
+      doc.text(`Modelo: ${obj.modelo || '-'}`, M+220, y);
+      y += 14;
+      doc.text(`Serie: ${obj.serie || '-'}`, M, y);
+      doc.text(`Activo: ${obj.activo || '-'}`, M+220, y);
+
+      y += 10;
+      lineSep();
+
+      // --- ACTUACIÓN / CANTIDAD + CIERRE ---
+      y += 20;
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text('SERVICIO', M, y);
+      y += 14;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      doc.text(`Actuación: ${obj.actuacion || '-'}`, M, y);
+      doc.text(`Cantidad: ${obj.cantidad || '-'}`, M+380, y);
+
+      y += 14;
+      doc.text(`Repuestos: ${obj.repuestos || '-'}`, M, y);
+      y += 14;
+      doc.text(`Horas trabajadas: ${obj.horas || '-'}`, M, y);
+      doc.text(`Estado final: ${obj.estado || '-'}`, M+220, y);
+
+      y += 10;
+      lineSep();
+
+      // --- OBSERVACIONES ---
+      y += 20;
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text('OBSERVACIONES / DIAGNÓSTICO', M, y);
+      y += 14;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+
+      const obsLines = doc.splitTextToSize(obj.acciones || '-', maxW);
       for (const line of obsLines){
-        if (y > 770){ doc.addPage(); y = M; }
-        doc.text(line, M, y); y += 12;
+        ensureSpace(14);
+        doc.text(line, M, y);
+        y += 12;
       }
 
-      // ✅✅✅ BLOQUE AÑADIDO: Fotos en el PDF (esto es lo que faltaba)
+      // --- FOTOS ---
       if (obj.fotos && obj.fotos.length){
-        // título
-        if (y > 720){ doc.addPage(); y = M; }
+        ensureSpace(60);
         y += 10;
-        doc.setDrawColor(120,140,170);
-        doc.line(M, y, 595-M, y);
-        y += 18;
+        lineSep();
+        y += 20;
 
         doc.setFont('helvetica','bold'); doc.setFontSize(11);
-        doc.text('Imágenes:', M, y);
+        doc.text('IMÁGENES', M, y);
         y += 10;
 
-        const pageW = doc.internal.pageSize.getWidth();
-        const pageH = doc.internal.pageSize.getHeight();
-        const maxW = pageW - 2*M;
-        const imgH = 320;     // alto estándar
-        const gap = 14;
+        const imgH = 320;
+        const gap = 16;
 
         for (let i=0; i<obj.fotos.length; i++){
-          const dataUrl = obj.fotos[i];
-          const fmt = detectFormat(dataUrl);
-
-          // si no cabe, nueva página
-          if (y + imgH + 40 > pageH){ doc.addPage(); y = M; }
+          ensureSpace(imgH + 60);
 
           doc.setFont('helvetica','bold'); doc.setFontSize(10);
           doc.text(`Foto ${i+1}`, M, y+12);
 
           try{
-            // Imagen
-            doc.addImage(dataUrl, fmt, M, y+18, maxW, imgH);
+            doc.addImage(obj.fotos[i], detectFormat(obj.fotos[i]), M, y+18, maxW, imgH);
           }catch(e){
-            // si alguna imagen falla, continuamos sin romper todo el PDF
             doc.setFont('helvetica','normal'); doc.setFontSize(9);
             doc.text('(No se pudo insertar esta imagen)', M, y+30);
           }
@@ -509,17 +559,19 @@
         }
       }
 
-      // Firma
-      if (y > 650){ doc.addPage(); y = M; }
+      // --- FIRMA ---
+      ensureSpace(190);
       doc.setFont('helvetica','bold'); doc.setFontSize(11);
       doc.text('Firma del cliente / conformidad', M, y);
       y += 10;
       doc.setDrawColor(80,100,140);
       doc.rect(M, y, 360, 130);
+
       if (obj.firma){
         try { doc.addImage(obj.firma, detectFormat(obj.firma), M+10, y+10, 340, 110); } catch(e){}
       }
 
+      // Archivo
       const nombre = `OT_${String(obj.consecutivo).padStart(5,'0')}_${(obj.marca||'Equipo')}_${(obj.modelo||'')}.pdf`
         .replace(/[^a-z0-9\-_\.]+/gi,'_');
 
