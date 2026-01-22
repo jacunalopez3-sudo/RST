@@ -681,14 +681,6 @@
     } else {
       textNorm('Sin firma', M+24, y+85, 10);
     }
-
-    // líneas nombre/cedula a la derecha
-    doc.setFont('helvetica','normal'); doc.setFontSize(10);
-    doc.text('Nombre: ______________________________', M+390, y+70);
-    doc.text('Cédula: _______________________________', M+390, y+95);
-
-    y += sigH + 10;
-
     // Guardado
     const nombre = `OT_${String(obj.consecutivo).padStart(5,'0')}_${(obj.equipo||'Equipo')}_${(obj.marca||'')}.pdf`
       .replace(/[^a-z0-9\-_\.]+/gi,'_');
