@@ -682,7 +682,7 @@
       textNorm('Sin firma', M+24, y+85, 10);
     }
     // Guardado
-    const nombre = `OT_${String(obj.consecutivo).padStart(5,'0')}_${(obj.equipo||'Equipo')}_${(obj.marca||'')}.pdf`
+    const nombre = `OT_${String(obj.consecutivo).padStart(5,'0')}_${(obj.equipo||'Equipo')}_${(obj.marca||'')}_${(obj.serie||'')}_${(obj.activo||'')}.pdf`
       .replace(/[^a-z0-9\-_\.]+/gi,'_');
 
     const blob = doc.output('blob');
