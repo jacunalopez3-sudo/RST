@@ -1,0 +1,12 @@
+{
+  "name": "Bennu Service Reports",
+  "short_name": "Bennu Reports",
+  "description": "Reportes de servicio técnico de Bennu Healthcare Solutions",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#09102a",
+  "theme_color": "#09102a",
+  "orientation": "any"
+}
