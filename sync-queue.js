@@ -106,7 +106,8 @@
       for (const record of records) {
         if (!navigator.onLine) break;
         try {
-          await handler(record, { update: put });
+          const completed = await handler(record, { update: put });
+          if (completed === false) continue;
           await remove(record.id);
         } catch (error) {
           record.attempts = (record.attempts || 0) + 1;
