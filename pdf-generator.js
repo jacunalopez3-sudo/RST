@@ -98,24 +98,43 @@
     function drawRows(title, items) {
       let continuation = false;
       drawSectionTitle(title);
+
       for (const [label, rawValue] of items) {
         const value = safeText(rawValue);
         const labelWidth = 120;
         const lines = doc.splitTextToSize(value, contentWidth - labelWidth - 22);
-        const rowHeight = Math.max(30, lines.length * lineHeight + 14);
-        if (y + rowHeight > height - bottom) {
-          addPage();
-          continuation = true;
-          drawSectionTitle(title, continuation);
+        let offset = 0;
+
+        while (offset < lines.length) {
+          if (height - bottom - y < 34) {
+            addPage();
+            continuation = true;
+            drawSectionTitle(title, continuation);
+          }
+
+          const availableLines = Math.max(
+            1,
+            Math.floor((height - bottom - y - 14) / lineHeight)
+          );
+          const chunk = lines.slice(offset, offset + availableLines);
+          const rowHeight = Math.max(30, chunk.length * lineHeight + 14);
+
+          doc.setDrawColor(205, 214, 235);
+          doc.setFillColor(252, 253, 255);
+          doc.roundedRect(margin, y, contentWidth, rowHeight, 4, 4, "FD");
+          setFont(8.5, true, [70, 84, 115]);
+          doc.text(offset ? `${label} (cont.)` : label, margin + 9, y + 18);
+          setFont(9);
+          doc.text(chunk, margin + labelWidth, y + 18);
+          y += rowHeight + 4;
+          offset += chunk.length;
+
+          if (offset < lines.length) {
+            addPage();
+            continuation = true;
+            drawSectionTitle(title, continuation);
+          }
         }
-        doc.setDrawColor(205, 214, 235);
-        doc.setFillColor(252, 253, 255);
-        doc.roundedRect(margin, y, contentWidth, rowHeight, 4, 4, "FD");
-        setFont(8.5, true, [70, 84, 115]);
-        doc.text(label, margin + 9, y + 18);
-        setFont(9);
-        doc.text(lines, margin + labelWidth, y + 18);
-        y += rowHeight + 4;
       }
       y += 7;
     }
