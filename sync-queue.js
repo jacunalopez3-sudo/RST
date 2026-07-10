@@ -1,7 +1,7 @@
 (() => {
   const DB_NAME = "bennu-service-reports";
   const STORE_NAME = "pending-reports";
-  const DB_VERSION = 1;
+  const DB_VERSION = 2;
   let flushing = false;
 
   function requestResult(request) {
@@ -19,6 +19,9 @@
         if (!db.objectStoreNames.contains(STORE_NAME)) {
           const store = db.createObjectStore(STORE_NAME, { keyPath: "id" });
           store.createIndex("createdAt", "createdAt");
+        }
+        if (!db.objectStoreNames.contains("drafts")) {
+          db.createObjectStore("drafts", { keyPath: "userId" });
         }
       };
       request.onsuccess = () => resolve(request.result);
