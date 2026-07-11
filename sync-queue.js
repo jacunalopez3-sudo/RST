@@ -72,7 +72,7 @@
     return record;
   }
 
-  async function enqueue(data, userId) {
+  async function enqueue(data, userId, state = {}) {
     const record = {
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
@@ -80,7 +80,7 @@
       userId,
       attempts: 0,
       lastError: null,
-      state: {},
+      state: { ...state },
       data
     };
     await put(record);
