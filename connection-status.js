@@ -16,7 +16,11 @@
 
   async function pendingCount() {
     try {
-      return window.BennuSyncQueue ? await BennuSyncQueue.count() : 0;
+      if (!window.BennuSyncQueue) return 0;
+      return await Promise.race([
+        BennuSyncQueue.count(),
+        new Promise(resolve => setTimeout(() => resolve(0), 1500))
+      ]);
     } catch (_) {
       return 0;
     }
