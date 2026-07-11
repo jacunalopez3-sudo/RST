@@ -1,11 +1,10 @@
-const CACHE_VERSION = "bennu-shell-v7";
+const CACHE_VERSION = "bennu-shell-v8";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./offline.js",
   "./sync-queue.js",
-  "./pdf-generator.js",
   "./draft-recovery.js",
   "./connection-status.css",
   "./connection-status.js",
