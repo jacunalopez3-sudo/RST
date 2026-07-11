@@ -65,6 +65,6 @@ BennuDrafts.configure({
 window.addEventListener('bennu:draft-saved',e=>{$('draftStatus').textContent='Borrador guardado '+new Date(e.detail.savedAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})});
 window.addEventListener('bennu:draft-restored',()=>{$('draftStatus').textContent='Borrador recuperado automáticamente'});
 window.addEventListener('bennu:draft-cleared',()=>{$('draftStatus').textContent=''});
-async function session(s){user=s?.user||null;$('loginCard').classList.toggle('hidden',!!user);$('app').classList.toggle('hidden',!user);$('sessionBar').classList.toggle('hidden',!user);$('sessionEmail').textContent=user?.email||'';if(user){setTimeout(resize,0);nowFields();await loadPersonnel();setCurrentPersonnel();next();showView('form');syncPendingReports();BennuDrafts.setUser(user.id)}else BennuDrafts.setUser(null)}db.auth.getSession().then(({data})=>session(data.session));db.auth.onAuthStateChange((_e,s)=>session(s));
+async function session(s){user=s?.user||null;$('loginCard').classList.toggle('hidden',!!user);$('app').classList.toggle('hidden',!user);$('sessionBar').classList.toggle('hidden',!user);$('sessionEmail').textContent=user?.email||'';if(user){setTimeout(resize,0);nowFields();await loadPersonnel();setCurrentPersonnel();next();showView('form');syncPendingReports();BennuDrafts.setUser(user.id)}else BennuDrafts.setUser(null)}db.auth.getSession().then(({data})=>session(data.session));db.auth.onAuthStateChange((_e,s)=>setTimeout(()=>session(s),0));
 </script><script src="./offline.js"></script>
 </body></html>
