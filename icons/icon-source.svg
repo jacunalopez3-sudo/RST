@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Bennu Service Reports</title>
+  <desc id="desc">Icono corporativo azul oscuro con sÃ­mbolo Bennu y un check de reporte.</desc>
+  <metadata>ComposiciÃ³n vectorial equivalente creada porque assets/bennu-logo.png no estÃ¡ presente en el repositorio.</metadata>
+  <rect width="512" height="512" fill="#09102A"/>
+  <circle cx="256" cy="236" r="184" fill="#101B42" opacity="0.72"/>
+  <g aria-label="SÃ­mbolo Bennu">
+    <rect x="76" y="181" width="128" height="128" rx="24" fill="#F4F8FF"/>
+    <path d="M98 266 L98 240 L166 204 L188 204 L188 222 L120 258 Z" fill="#2E75D3"/>
+    <path d="M98 286 L98 267 L166 231 L188 231 L188 249 L120 286 Z" fill="#5598EA"/>
+    <path d="M98 230 L98 211 L142 211 L113 230 Z" fill="#79B5FF"/>
+  </g>
+  <text x="220" y="272" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="74" font-weight="700" letter-spacing="-3">Bennu</text>
+  <g aria-label="Reporte completado">
+    <rect x="355" y="342" width="82" height="94" rx="18" fill="#1667C8" stroke="#9FD0FF" stroke-width="5"/>
+    <path d="M378 385 L392 400 L418 371" fill="none" stroke="#FFFFFF" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M377 417 H417" stroke="#9FD0FF" stroke-width="7" stroke-linecap="round"/>
+  </g>
+</svg>

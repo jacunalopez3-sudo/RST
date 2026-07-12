@@ -1,8 +1,12 @@
-const CACHE_VERSION = "bennu-shell-v26";
+const CACHE_VERSION = "bennu-shell-v27";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
+  "./icons/icon-180.png",
+  "./icons/icon-192.png",
+  "./icons/icon-512.png",
+  "./icons/icon-maskable-512.png",
   "./offline.js",
   "./sync-queue.js",
   "./draft-recovery.js",
