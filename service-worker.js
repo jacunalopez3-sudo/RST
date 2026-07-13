@@ -1,4 +1,4 @@
-const CACHE_VERSION = "bennu-shell-v29";
+const CACHE_VERSION = "bennu-shell-v30";
 const APP_SHELL = [
   "./",
   "./index.html",
