@@ -1,7 +1,7 @@
 (() => {
   if (!("serviceWorker" in navigator)) return;
 
-  const VERSION = window.BENNU_APP_VERSION || "2026.07.13.2";
+  const VERSION = window.BENNU_APP_VERSION || "2026.07.13.3";
   const RELOAD_KEY = "bennu-sw-reloaded-version";
   let reloading = false;
 
