@@ -4,6 +4,21 @@
   const req = request => new Promise((resolve, reject) => { request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); });
   const clean = value => String(value || '').trim();
   const comparable = value => clean(value).toLocaleLowerCase('es');
+  const errorField = value => value === null || value === undefined || value === '' ? '(sin información)' : String(value);
+  function formatSyncError(table, error) {
+    return `Error cargando ${table}\n\ncode:\n${errorField(error?.code)}\n\nmessage:\n${errorField(error?.message || error)}\n\ndetails:\n${errorField(error?.details)}\n\nhint:\n${errorField(error?.hint)}`;
+  }
+  function reportSyncError(table, error) {
+    const diagnostic = formatSyncError(table, error);
+    console.error(diagnostic, error);
+    if (error && typeof error === 'object') {
+      try {
+        error.bennuCatalogTable = table;
+        error.bennuCatalogDiagnostic = diagnostic;
+      } catch (_) {}
+    }
+    return diagnostic;
+  }
   const open = () => new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
     request.onupgradeneeded = () => {
@@ -41,14 +56,52 @@
       tx.onabort = tx.onerror;
     });
   }
-  async function page(table, lastSync) { let rows = [], from = 0; for (;;) { let q = client.from(table).select('*').order('updated_at').range(from, from + 499); if (lastSync) q = q.gt('updated_at', lastSync); const { data, error } = await q; if (error) throw error; rows.push(...(data || [])); if (!data || data.length < 500) break; from += 500; } return rows; }
+  async function page(table, lastSync) {
+    let rows = [], from = 0;
+    for (;;) {
+      let q = client.from(table).select('*').order('updated_at').range(from, from + 499);
+      if (lastSync) q = q.gt('updated_at', lastSync);
+      let response;
+      try {
+        response = await q;
+      } catch (error) {
+        reportSyncError(table, error);
+        throw error;
+      }
+      const { data, error } = response;
+      if (error) {
+        reportSyncError(table, error);
+        throw error;
+      }
+      rows.push(...(data || []));
+      if (!data || data.length < 500) break;
+      from += 500;
+    }
+    return rows;
+  }
   async function sync({ forceFull = false } = {}) {
+    console.info('navigator.onLine', navigator.onLine);
     if (!client || !navigator.onLine) throw new Error('Sin conexión');
     const clientMark = forceFull ? null : await meta('last_clients_sync');
     const equipmentMark = forceFull ? null : await meta('last_equipment_sync');
     const started = new Date().toISOString();
+    const diagnostics = [];
+    console.info('iniciando descarga de clients');
     const clients = await page('clients', clientMark);
+    console.info('clients descargados', { cantidad: clients.length });
+    if (clients.length === 0) {
+      const message = 'La consulta terminó correctamente pero devolvió 0 clientes.';
+      diagnostics.push(message);
+      console.warn(message);
+    }
+    console.info('iniciando descarga equipment');
     const equipment = await page('equipment', equipmentMark);
+    console.info('equipment descargados', { cantidad: equipment.length });
+    if (equipment.length === 0) {
+      const message = 'La consulta terminó correctamente pero devolvió 0 equipos.';
+      diagnostics.push(message);
+      console.warn(message);
+    }
     if (forceFull) {
       await replaceCatalog(clients, equipment, started);
     } else {
@@ -59,7 +112,7 @@
       await setMeta('last_catalog_sync', started);
     }
     window.dispatchEvent(new CustomEvent('bennu:catalog-updated', { detail: { at: started, full: forceFull } }));
-    return { clients: clients.length, equipment: equipment.length, at: started, full: forceFull };
+    return { clients: clients.length, equipment: equipment.length, at: started, full: forceFull, diagnostics };
   }
   async function clients() { return (await all('catalog_clients')).filter(x => x.active).sort((a, b) => a.name.localeCompare(b.name, 'es')); }
   async function equipment(clientId) { return (await store('catalog_equipment', 'readonly', s => req(s.index('client_id').getAll(clientId)))).filter(x => x.active).sort((a, b) => [a.equipment_name, a.brand, a.model, a.serial_number].join('|').localeCompare([b.equipment_name, b.brand, b.model, b.serial_number].join('|'), 'es')); }
@@ -73,5 +126,5 @@
   async function queueExistingEquipmentUpdate(request) { const record = { ...request, id: request.id || updateKey(request), createdAt: request.createdAt || new Date().toISOString(), attempts: request.attempts || 0 }; await store('pending_equipment_updates', 'readwrite', s => s.put(record)); return record; }
   async function flushPendingEquipmentUpdates() { if (!navigator.onLine) return []; const pending = await all('pending_equipment_updates'), results = []; for (const item of pending) { try { const updated = await updateExistingEquipment(item); await store('pending_equipment_updates', 'readwrite', s => s.delete(item.id)); results.push({ id: item.id, ok: true, equipment: updated }); window.dispatchEvent(new CustomEvent('bennu:equipment-update-synced', { detail: { ok: true, equipment: updated } })); } catch (error) { const saved = { ...item, attempts: (item.attempts || 0) + 1, lastAttempt: new Date().toISOString(), error: error.message }; await store('pending_equipment_updates', 'readwrite', s => s.put(saved)); results.push({ id: item.id, ok: false, error }); window.dispatchEvent(new CustomEvent('bennu:equipment-update-synced', { detail: { ok: false, message: error.message } })); } } return results; }
   function init(options) { client = options.supabase; }
-  window.BennuCatalog = { init, sync, fullSync: () => sync({ forceFull: true }), clients, equipment, lastSync: () => meta('last_catalog_sync'), findOrCreate, queueEquipment, flushPending, prepareReport, validateEquipmentConflicts, updateExistingEquipment, queueExistingEquipmentUpdate, flushPendingEquipmentUpdates };
+  window.BennuCatalog = { init, sync, fullSync: () => sync({ forceFull: true }), clients, equipment, lastSync: () => meta('last_catalog_sync'), findOrCreate, queueEquipment, flushPending, prepareReport, validateEquipmentConflicts, updateExistingEquipment, queueExistingEquipmentUpdate, flushPendingEquipmentUpdates, formatSyncError };
 })();

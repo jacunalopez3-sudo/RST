@@ -34,6 +34,21 @@
   }
   function showLocalCatalogStatus() { $('catalogStatus').textContent = localStatus(); }
   function updateCatalogStatus(value) { const formatted = formatDate(value); $('catalogStatus').textContent = formatted ? 'Catálogo actualizado: ' + formatted : localStatus(); }
+  function syncErrorText(error) {
+    return error?.bennuCatalogDiagnostic || BennuCatalog.formatSyncError?.('sin tabla identificada', error) || String(error?.message || error);
+  }
+  function showSyncError(error) {
+    const diagnostic = syncErrorText(error);
+    console.error(diagnostic, error);
+    $('catalogStatus').textContent = diagnostic;
+  }
+  function showSyncResult(result, fallbackAt = null) {
+    if (result?.diagnostics?.length) {
+      $('catalogStatus').textContent = result.diagnostics.join('\n\n');
+      return;
+    }
+    updateCatalogStatus(result?.at || fallbackAt);
+  }
   async function reloadCatalog(selectedClientId) {
     await loadLocal();
     const select = $('catalogClient');
@@ -52,11 +67,10 @@
     try {
       const result = await BennuCatalog.sync({ forceFull });
       await reloadCatalog(selectedClientId);
-      updateCatalogStatus(result.at);
+      showSyncResult(result);
       return result;
     } catch (error) {
-      console.error('No se pudo actualizar el catálogo:', error);
-      $('catalogStatus').textContent = 'No se pudo actualizar; se mantiene la copia local.';
+      showSyncError(error);
       throw error;
     } finally {
       if (button) { button.disabled = false; button.textContent = 'Actualizar catálogo'; }
@@ -81,10 +95,9 @@
         result = await BennuCatalog.sync({ forceFull: true });
         await loadLocal();
       }
-      updateCatalogStatus(result?.at || lastSync);
+      showSyncResult(result, lastSync);
     } catch (error) {
-      console.error('No se pudo actualizar el catálogo:', error);
-      showLocalCatalogStatus();
+      showSyncError(error);
     }
   }
   async function init(options) {
