@@ -1,0 +1,31 @@
+{
+  "file": "Base_de_Equipos_BHS_Servicio_T_cnico_1783904494.xlsx",
+  "sheet": "base de equipos bhs- servicio t",
+  "source_rows": 29,
+  "clients_detected": 24,
+  "equipment_detected": 28,
+  "duplicates": [],
+  "invalid": [
+    {
+      "row": 30,
+      "reason": "fila vacía o compuesta solo por ceros"
+    }
+  ],
+  "ambiguous_clients": [
+    [
+      "Hospital William Allen Taylor",
+      "Hospital William Allen Taylor / Taladro",
+      "Hospital William Allen Taylor 7 Taladro",
+      "(1) Hospital William Allen Taylor",
+      "(2)Hospital William Allen Taylor",
+      "(3)Hospital William Allen Taylor",
+      "(4)Hospital William Allen Taylor",
+      "(5)Hospital William Allen Taylor",
+      "(6)Hospital William Allen Taylor",
+      "(7)Hospital William Allen Taylor",
+      "(8})Hospital William Allen Taylor",
+      "(9)Hospital William Allen Taylor"
+    ]
+  ],
+  "applied": false
+}
