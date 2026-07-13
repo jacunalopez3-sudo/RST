@@ -20,6 +20,45 @@
 @media(max-width:600px){#formView{padding:14px}.form-top-actions{flex-direction:column}.top-action{width:100%}.form-top-actions button{width:100%}#catalogStatus{display:block;width:auto;max-width:100%;text-align:left}.report-block{padding:15px}.action-row>*{width:100%}.block-heading{gap:9px}}
 @media (hover:none) and (pointer:coarse) and (min-width:601px){#sigPad{height:220px;min-height:220px;max-height:220px}}
 @media (max-width:600px){#sigPad{height:180px;min-height:180px;max-height:180px}}
+
+.client-top:has(#catalogClient),.equipment-grid:has(#catalogEquipment){grid-template-columns:minmax(0,1fr);column-gap:14px;row-gap:0;align-items:start}
+.client-top:has(#catalogClient)>.field:first-child,.equipment-grid:has(#catalogEquipment)>.field:first-child{display:contents}
+.client-top:has(#catalogClient)>.field:first-child>label:first-of-type{grid-column:1;grid-row:1}
+#catalogClient{grid-column:1;grid-row:2}
+.client-top:has(#catalogClient)>.field:first-child>label:last-of-type{grid-column:1;grid-row:3}
+#cliente{grid-column:1;grid-row:4}
+.client-top:has(#catalogClient)>.field:nth-child(2){grid-column:1;grid-row:5}
+.client-top:has(#catalogClient)>.field:nth-child(3){grid-column:1;grid-row:6}
+.equipment-grid:has(#catalogEquipment)>.field:first-child>label:first-of-type{grid-column:1;grid-row:1}
+#catalogEquipment{grid-column:1;grid-row:2}
+#catalogSearch{grid-column:1;grid-row:3}
+.equipment-grid:has(#catalogEquipment)>.field:first-child>label:last-of-type{grid-column:1;grid-row:4}
+#equipo{grid-column:1;grid-row:5}
+.equipment-grid:has(#catalogEquipment)>.field:nth-child(2){grid-column:1;grid-row:6}
+.equipment-grid:has(#catalogEquipment)>.field:nth-child(3){grid-column:1;grid-row:7}
+.equipment-grid:has(#catalogEquipment)>.field:nth-child(4){grid-column:1;grid-row:8}
+.equipment-grid:has(#catalogEquipment)>.field:nth-child(5){grid-column:1;grid-row:9}
+.equipment-grid:has(#catalogEquipment)>.field:first-child>.btns{grid-column:1;grid-row:10;justify-self:start}
+@media(min-width:900px){
+.client-top:has(#catalogClient){grid-template-columns:repeat(3,minmax(0,1fr))}
+.client-top:has(#catalogClient)>.field:first-child>label:first-of-type{grid-column:1/-1;grid-row:1}
+#catalogClient{grid-column:1/-1;grid-row:2}
+.client-top:has(#catalogClient)>.field:first-child>label:last-of-type{grid-column:1;grid-row:3}
+#cliente{grid-column:1;grid-row:4}
+.client-top:has(#catalogClient)>.field:nth-child(2){grid-column:2;grid-row:3/5}
+.client-top:has(#catalogClient)>.field:nth-child(3){grid-column:3;grid-row:3/5}
+.equipment-grid:has(#catalogEquipment){grid-template-columns:repeat(5,minmax(0,1fr))}
+.equipment-grid:has(#catalogEquipment)>.field:first-child>label:first-of-type{grid-column:1/-1;grid-row:1}
+#catalogEquipment{grid-column:1/-1;grid-row:2}
+#catalogSearch{grid-column:1/-1;grid-row:3}
+.equipment-grid:has(#catalogEquipment)>.field:first-child>label:last-of-type{grid-column:1;grid-row:4}
+#equipo{grid-column:1;grid-row:5}
+.equipment-grid:has(#catalogEquipment)>.field:nth-child(2){grid-column:2;grid-row:4/6}
+.equipment-grid:has(#catalogEquipment)>.field:nth-child(3){grid-column:3;grid-row:4/6}
+.equipment-grid:has(#catalogEquipment)>.field:nth-child(4){grid-column:4;grid-row:4/6}
+.equipment-grid:has(#catalogEquipment)>.field:nth-child(5){grid-column:5;grid-row:4/6}
+.equipment-grid:has(#catalogEquipment)>.field:first-child>.btns{grid-column:1/-1;grid-row:6}
+}
 </style></head><body>
 <header><div class="wrap top"><div><h1 style="margin:0">Bennu Service Reports</h1><div class="muted" style="margin-top:4px;font-size:.92rem">Bennu Healthcare Solutions</div></div><div id="sessionBar" class="hidden"><span id="sessionEmail" class="muted"></span> <button id="logoutBtn">Cerrar sesión</button></div></div></header>
 <main class="wrap"><section id="loginCard" class="card login"><h2>Ingreso de ingeniería</h2><form id="loginForm"><label>Correo</label><input id="loginEmail" type="email" required><label>Contraseña</label><input id="loginPassword" type="password" required><div class="btns"><button class="ok" type="submit">Ingresar</button></div><p id="loginStatus" class="muted"></p></form></section>
