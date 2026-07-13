@@ -1,19 +1,19 @@
-const CACHE_VERSION = "bennu-shell-2026.07.13.3";
+const CACHE_VERSION = "bennu-shell-2026.07.13.4";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./manifest.webmanifest?v=2026.07.13.3",
+  "./manifest.webmanifest?v=2026.07.13.4",
   "./icons/icon-180.png",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/icon-maskable-512.png",
-  "./offline.js?v=2026.07.13.3",
-  "./sync-queue.js?v=2026.07.13.3",
-  "./draft-recovery.js?v=2026.07.13.3",
-  "./connection-status.css?v=2026.07.13.3",
-  "./connection-status.js?v=2026.07.13.3",
-  "./catalog-db.js?v=2026.07.13.3",
-  "./catalog-ui.js?v=2026.07.13.3",
+  "./offline.js?v=2026.07.13.4",
+  "./sync-queue.js?v=2026.07.13.4",
+  "./draft-recovery.js?v=2026.07.13.4",
+  "./connection-status.css?v=2026.07.13.4",
+  "./connection-status.js?v=2026.07.13.4",
+  "./catalog-db.js?v=2026.07.13.4",
+  "./catalog-ui.js?v=2026.07.13.4",
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js",
   "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js",
   "https://cdn.jsdelivr.net/npm/signature_pad@5.0.10/dist/signature_pad.umd.min.js"
