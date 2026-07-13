@@ -1,7 +1,7 @@
 (() => {
   const DB_NAME = "bennu-service-reports";
   const STORE_NAME = "drafts";
-  const DB_VERSION = 3;
+  const DB_VERSION = 4;
   const MAX_AGE = 30 * 24 * 60 * 60 * 1000;
   let options = null;
   let activeUser = null;
