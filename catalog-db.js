@@ -23,8 +23,44 @@
   const putMany = (name, rows) => store(name, 'readwrite', s => { for (const row of rows) s.put(row); });
   const meta = async key => (await store('catalog_meta', 'readonly', s => req(s.get(key))))?.value || null;
   const setMeta = (key, value) => store('catalog_meta', 'readwrite', s => s.put({ key, value }));
+  async function clearStore(name) { return store(name, 'readwrite', objectStore => objectStore.clear()); }
+  async function clearCatalogMeta() { await store('catalog_meta', 'readwrite', objectStore => { objectStore.delete('last_clients_sync'); objectStore.delete('last_equipment_sync'); objectStore.delete('last_catalog_sync'); }); }
+  async function replaceCatalog(clients, equipment, started) {
+    const db = await open();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(['catalog_clients', 'catalog_equipment', 'catalog_meta'], 'readwrite');
+      const clientStore = tx.objectStore('catalog_clients'), equipmentStore = tx.objectStore('catalog_equipment'), metaStore = tx.objectStore('catalog_meta');
+      clientStore.clear(); equipmentStore.clear();
+      for (const row of clients) clientStore.put(row);
+      for (const row of equipment) equipmentStore.put(row);
+      metaStore.put({ key: 'last_clients_sync', value: started });
+      metaStore.put({ key: 'last_equipment_sync', value: started });
+      metaStore.put({ key: 'last_catalog_sync', value: started });
+      tx.oncomplete = () => { db.close(); resolve(); };
+      tx.onerror = () => { db.close(); reject(tx.error); };
+      tx.onabort = tx.onerror;
+    });
+  }
   async function page(table, lastSync) { let rows = [], from = 0; for (;;) { let q = client.from(table).select('*').order('updated_at').range(from, from + 499); if (lastSync) q = q.gt('updated_at', lastSync); const { data, error } = await q; if (error) throw error; rows.push(...(data || [])); if (!data || data.length < 500) break; from += 500; } return rows; }
-  async function sync() { if (!client || !navigator.onLine) throw new Error('Sin conexión'); const cmark = await meta('last_clients_sync'), emark = await meta('last_equipment_sync'), started = new Date().toISOString(); const clients = await page('clients', cmark), equipment = await page('equipment', emark); await putMany('catalog_clients', clients); await putMany('catalog_equipment', equipment); await setMeta('last_clients_sync', started); await setMeta('last_equipment_sync', started); await setMeta('last_catalog_sync', started); window.dispatchEvent(new CustomEvent('bennu:catalog-updated', { detail: { at: started } })); return { clients: clients.length, equipment: equipment.length, at: started }; }
+  async function sync({ forceFull = false } = {}) {
+    if (!client || !navigator.onLine) throw new Error('Sin conexión');
+    const clientMark = forceFull ? null : await meta('last_clients_sync');
+    const equipmentMark = forceFull ? null : await meta('last_equipment_sync');
+    const started = new Date().toISOString();
+    const clients = await page('clients', clientMark);
+    const equipment = await page('equipment', equipmentMark);
+    if (forceFull) {
+      await replaceCatalog(clients, equipment, started);
+    } else {
+      await putMany('catalog_clients', clients);
+      await putMany('catalog_equipment', equipment);
+      await setMeta('last_clients_sync', started);
+      await setMeta('last_equipment_sync', started);
+      await setMeta('last_catalog_sync', started);
+    }
+    window.dispatchEvent(new CustomEvent('bennu:catalog-updated', { detail: { at: started, full: forceFull } }));
+    return { clients: clients.length, equipment: equipment.length, at: started, full: forceFull };
+  }
   async function clients() { return (await all('catalog_clients')).filter(x => x.active).sort((a, b) => a.name.localeCompare(b.name, 'es')); }
   async function equipment(clientId) { return (await store('catalog_equipment', 'readonly', s => req(s.index('client_id').getAll(clientId)))).filter(x => x.active).sort((a, b) => [a.equipment_name, a.brand, a.model, a.serial_number].join('|').localeCompare([b.equipment_name, b.brand, b.model, b.serial_number].join('|'), 'es')); }
   async function findOrCreate(data) { if (!client || !navigator.onLine) throw new Error('Sin conexión'); const client_id = data.clientId; if (!client_id) throw new Error('Cliente registrado requerido'); let q = client.from('equipment').select('*').eq('client_id', client_id); if (clean(data.serie)) q = q.eq('serial_number', clean(data.serie)); else if (clean(data.activo)) q = q.is('serial_number', null).eq('asset_number', clean(data.activo)); else q = q.is('serial_number', null).is('asset_number', null).eq('equipment_name', clean(data.equipo)).eq('brand', clean(data.marca)).eq('model', clean(data.modelo)); const { data: found, error } = await q.limit(1); if (error) throw error; if (found?.length) { await putMany('catalog_equipment', found); return found[0]; } const payload = { client_id, equipment_name: clean(data.equipo), brand: clean(data.marca) || null, model: clean(data.modelo) || null, serial_number: clean(data.serie) || null, asset_number: clean(data.activo) || null }; const { data: created, error: createError } = await client.from('equipment').insert(payload).select('*').single(); if (createError) throw createError; await putMany('catalog_equipment', [created]); return created; }
@@ -37,5 +73,5 @@
   async function queueExistingEquipmentUpdate(request) { const record = { ...request, id: request.id || updateKey(request), createdAt: request.createdAt || new Date().toISOString(), attempts: request.attempts || 0 }; await store('pending_equipment_updates', 'readwrite', s => s.put(record)); return record; }
   async function flushPendingEquipmentUpdates() { if (!navigator.onLine) return []; const pending = await all('pending_equipment_updates'), results = []; for (const item of pending) { try { const updated = await updateExistingEquipment(item); await store('pending_equipment_updates', 'readwrite', s => s.delete(item.id)); results.push({ id: item.id, ok: true, equipment: updated }); window.dispatchEvent(new CustomEvent('bennu:equipment-update-synced', { detail: { ok: true, equipment: updated } })); } catch (error) { const saved = { ...item, attempts: (item.attempts || 0) + 1, lastAttempt: new Date().toISOString(), error: error.message }; await store('pending_equipment_updates', 'readwrite', s => s.put(saved)); results.push({ id: item.id, ok: false, error }); window.dispatchEvent(new CustomEvent('bennu:equipment-update-synced', { detail: { ok: false, message: error.message } })); } } return results; }
   function init(options) { client = options.supabase; }
-  window.BennuCatalog = { init, sync, clients, equipment, lastSync: () => meta('last_catalog_sync'), findOrCreate, queueEquipment, flushPending, prepareReport, validateEquipmentConflicts, updateExistingEquipment, queueExistingEquipmentUpdate, flushPendingEquipmentUpdates };
+  window.BennuCatalog = { init, sync, fullSync: () => sync({ forceFull: true }), clients, equipment, lastSync: () => meta('last_catalog_sync'), findOrCreate, queueEquipment, flushPending, prepareReport, validateEquipmentConflicts, updateExistingEquipment, queueExistingEquipmentUpdate, flushPendingEquipmentUpdates };
 })();
