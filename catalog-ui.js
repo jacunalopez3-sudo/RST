@@ -1,6 +1,6 @@
 (() => {
   const $ = id => document.getElementById(id);
-  let db, allClients = [], allEquipment = [], ready = false, originalEquipment = null, editingRegistered = false;
+  let db, allClients = [], allEquipment = [], ready = false, originalEquipment = null, editingRegistered = false, rebuildNoticeUntil = 0, rebuildNoticeTimer = null;
   const option = (text, value) => new Option(text, value);
   const normalizeCatalogValue = value => String(value || '').trim();
   const debounce = (fn, ms) => { let timer; return () => { clearTimeout(timer); timer = setTimeout(fn, ms); }; };
@@ -33,6 +33,15 @@
     return navigator.onLine ? 'Se utiliza la copia local del catálogo.' : 'Sin conexión; se utiliza el catálogo local.';
   }
   function showLocalCatalogStatus() { $('catalogStatus').textContent = localStatus(); }
+  function showRebuildNotice(event) {
+    const message = event?.detail?.message || 'Se reconstruyó el catálogo local porque estaba desactualizado.';
+    rebuildNoticeUntil = Date.now() + 8000;
+    $('catalogStatus').textContent = message;
+    clearTimeout(rebuildNoticeTimer);
+    rebuildNoticeTimer = setTimeout(() => {
+      if (Date.now() >= rebuildNoticeUntil && $('catalogStatus').textContent === message) showLocalCatalogStatus();
+    }, 8000);
+  }
   function updateCatalogStatus(value) { const formatted = formatDate(value); $('catalogStatus').textContent = formatted ? 'Catálogo actualizado: ' + formatted : localStatus(); }
   function syncErrorText(error) {
     return error?.bennuCatalogDiagnostic || BennuCatalog.formatSyncError?.('sin tabla identificada', error) || String(error?.message || error);
@@ -47,6 +56,7 @@
       $('catalogStatus').textContent = result.diagnostics.join('\n\n');
       return;
     }
+    if (Date.now() < rebuildNoticeUntil) return;
     updateCatalogStatus(result?.at || fallbackAt);
   }
   async function reloadCatalog(selectedClientId) {
@@ -106,6 +116,8 @@
     db = options.supabase;
     BennuCatalog.init({ supabase: db });
     build();
+    window.addEventListener('bennu:catalog-rebuilt', showRebuildNotice);
+    window.addEventListener('bennu:catalog-sync-error', event => showSyncError(event.detail?.error));
     await initializeCatalogData();
     window.addEventListener('online', async () => {
       await BennuCatalog.flushPending().catch(() => {});

@@ -1,6 +1,10 @@
 (() => {
-  const DB_NAME = 'bennu-service-reports', DB_VERSION = 4;
-  let client = null;
+  const DB_NAME = 'bennu-service-reports', DB_VERSION = 5;
+  const REQUIRED_STORES = ['pending-reports', 'drafts', 'catalog_clients', 'catalog_equipment', 'catalog_meta', 'pending_equipment', 'pending_equipment_updates'];
+  const CRITICAL_STORES = ['pending-reports', 'drafts', 'pending_equipment', 'pending_equipment_updates'];
+  const REBUILD_MESSAGE = 'Se reconstruyó el catálogo local porque estaba desactualizado.';
+  let client = null, currentDbVersion = DB_VERSION, rebuildPromise = null;
+  const openConnections = new Set();
   const req = request => new Promise((resolve, reject) => { request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); });
   const clean = value => String(value || '').trim();
   const comparable = value => clean(value).toLocaleLowerCase('es');
@@ -12,28 +16,164 @@
     const diagnostic = formatSyncError(table, error);
     console.error(diagnostic, error);
     if (error && typeof error === 'object') {
-      try {
-        error.bennuCatalogTable = table;
-        error.bennuCatalogDiagnostic = diagnostic;
-      } catch (_) {}
+      try { error.bennuCatalogTable = table; error.bennuCatalogDiagnostic = diagnostic; } catch (_) {}
     }
     return diagnostic;
   }
-  const open = () => new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-    request.onupgradeneeded = () => {
-      const db = request.result;
-      if (!db.objectStoreNames.contains('pending-reports')) { const s = db.createObjectStore('pending-reports', { keyPath: 'id' }); s.createIndex('createdAt', 'createdAt'); }
-      if (!db.objectStoreNames.contains('drafts')) db.createObjectStore('drafts', { keyPath: 'userId' });
-      if (!db.objectStoreNames.contains('catalog_clients')) db.createObjectStore('catalog_clients', { keyPath: 'id' });
-      if (!db.objectStoreNames.contains('catalog_equipment')) { const s = db.createObjectStore('catalog_equipment', { keyPath: 'id' }); s.createIndex('client_id', 'client_id'); s.createIndex('updated_at', 'updated_at'); }
-      if (!db.objectStoreNames.contains('catalog_meta')) db.createObjectStore('catalog_meta', { keyPath: 'key' });
-      if (!db.objectStoreNames.contains('pending_equipment')) db.createObjectStore('pending_equipment', { keyPath: 'local_id' });
-      if (!db.objectStoreNames.contains('pending_equipment_updates')) db.createObjectStore('pending_equipment_updates', { keyPath: 'id' });
-    };
-    request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error);
-  });
-  async function store(name, mode, fn) { const db = await open(); return new Promise((resolve, reject) => { const tx = db.transaction(name, mode), s = tx.objectStore(name); let value; try { value = fn(s); } catch (error) { db.close(); reject(error); return; } tx.oncomplete = () => { db.close(); resolve(value); }; tx.onerror = () => { db.close(); reject(tx.error); }; tx.onabort = tx.onerror; }); }
+  function ensureSchema(db, transaction) {
+    const getStore = (name, options) => db.objectStoreNames.contains(name) ? transaction?.objectStore(name) : db.createObjectStore(name, options);
+    let objectStore = getStore('pending-reports', { keyPath: 'id' });
+    if (objectStore && !objectStore.indexNames.contains('createdAt')) objectStore.createIndex('createdAt', 'createdAt');
+    getStore('drafts', { keyPath: 'userId' });
+    getStore('catalog_clients', { keyPath: 'id' });
+    objectStore = getStore('catalog_equipment', { keyPath: 'id' });
+    if (objectStore && !objectStore.indexNames.contains('client_id')) objectStore.createIndex('client_id', 'client_id');
+    if (objectStore && !objectStore.indexNames.contains('updated_at')) objectStore.createIndex('updated_at', 'updated_at');
+    getStore('catalog_meta', { keyPath: 'key' });
+    getStore('pending_equipment', { keyPath: 'local_id' });
+    getStore('pending_equipment_updates', { keyPath: 'id' });
+  }
+  function closeConnection(db) { if (!db) return; openConnections.delete(db); try { db.close(); } catch (_) {} }
+  function closeOpenConnections() { for (const db of [...openConnections]) closeConnection(db); }
+  function isRecoverableIndexedDbError(error) {
+    const message = String(error?.message || error || '');
+    return error?.name === 'InvalidStateError' || error?.name === 'NotFoundError' || error?.name === 'VersionError' || message.includes('One of the specified object stores was not found');
+  }
+  function openDatabase(version = currentDbVersion) {
+    return new Promise((resolve, reject) => {
+      let request;
+      try { request = version === null ? indexedDB.open(DB_NAME) : indexedDB.open(DB_NAME, version); }
+      catch (error) { reject(error); return; }
+      request.onupgradeneeded = () => ensureSchema(request.result, request.transaction);
+      request.onsuccess = () => {
+        const db = request.result;
+        currentDbVersion = Math.max(currentDbVersion, db.version);
+        openConnections.add(db);
+        db.onversionchange = () => closeConnection(db);
+        resolve(db);
+      };
+      request.onerror = () => reject(request.error);
+      request.onblocked = () => reject(new DOMException('IndexedDB está bloqueada por otra conexión.', 'InvalidStateError'));
+    });
+  }
+  function missingStores(db) { return REQUIRED_STORES.filter(name => !db.objectStoreNames.contains(name)); }
+  async function open(recovery = { attempted: false }) {
+    try {
+      const db = await openDatabase(currentDbVersion);
+      const missing = missingStores(db);
+      if (missing.length) {
+        closeConnection(db);
+        throw new DOMException(`One of the specified object stores was not found: ${missing.join(', ')}`, 'NotFoundError');
+      }
+      return db;
+    } catch (error) {
+      if (error?.name === 'VersionError') {
+        try {
+          const db = await openDatabase(null), missing = missingStores(db);
+          if (!missing.length) return db;
+          closeConnection(db);
+        } catch (currentError) { error = currentError; }
+      }
+      if (!recovery.attempted && isRecoverableIndexedDbError(error)) {
+        recovery.attempted = true;
+        await rebuildIndexedDb();
+        return open(recovery);
+      }
+      throw error;
+    }
+  }
+  async function runStore(name, mode, fn, recovery) {
+    const db = await open(recovery);
+    return new Promise((resolve, reject) => {
+      let tx, objectStore, value;
+      try { tx = db.transaction(name, mode); objectStore = tx.objectStore(name); value = fn(objectStore); }
+      catch (error) { closeConnection(db); reject(error); return; }
+      tx.oncomplete = () => { closeConnection(db); resolve(value); };
+      tx.onerror = () => { const error = tx.error; closeConnection(db); reject(error); };
+      tx.onabort = tx.onerror;
+    });
+  }
+  async function store(name, mode, fn, recovery = { attempted: false }) {
+    try { return await runStore(name, mode, fn, recovery); }
+    catch (error) {
+      if (!recovery.attempted && isRecoverableIndexedDbError(error)) {
+        recovery.attempted = true;
+        await rebuildIndexedDb();
+        return store(name, mode, fn, recovery);
+      }
+      throw error;
+    }
+  }
+  async function readStoreRows(db, name) {
+    return new Promise((resolve, reject) => {
+      let tx;
+      try { tx = db.transaction(name, 'readonly'); } catch (error) { reject(error); return; }
+      const request = tx.objectStore(name).getAll();
+      request.onsuccess = () => resolve(request.result || []);
+      request.onerror = () => reject(request.error);
+      tx.onabort = () => reject(tx.error);
+    });
+  }
+  async function backupCriticalData() {
+    const db = await openDatabase(null), backup = {};
+    try {
+      for (const name of CRITICAL_STORES) if (db.objectStoreNames.contains(name)) backup[name] = await readStoreRows(db, name);
+      return backup;
+    } finally { closeConnection(db); }
+  }
+  async function upgradeMissingStores() {
+    closeOpenConnections();
+    const current = await openDatabase(null);
+    const nextVersion = Math.max(DB_VERSION, current.version + 1);
+    closeConnection(current);
+    const upgraded = await openDatabase(nextVersion), missing = missingStores(upgraded);
+    closeConnection(upgraded);
+    if (missing.length) throw new DOMException(`One of the specified object stores was not found: ${missing.join(', ')}`, 'NotFoundError');
+  }
+  async function deleteDatabaseAndRestore() {
+    closeOpenConnections();
+    const backup = await backupCriticalData();
+    closeOpenConnections();
+    await new Promise((resolve, reject) => {
+      const request = indexedDB.deleteDatabase(DB_NAME);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+      request.onblocked = () => reject(new DOMException('No se pudo reconstruir IndexedDB porque está abierta en otra pestaña.', 'InvalidStateError'));
+    });
+    currentDbVersion = DB_VERSION;
+    const db = await openDatabase(DB_VERSION);
+    const names = Object.keys(backup).filter(name => db.objectStoreNames.contains(name));
+    if (names.length) {
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction(names, 'readwrite');
+        for (const name of names) { const objectStore = tx.objectStore(name); for (const row of backup[name]) objectStore.put(row); }
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = tx.onerror;
+      });
+    }
+    closeConnection(db);
+  }
+  async function rebuildIndexedDb() {
+    if (rebuildPromise) return rebuildPromise;
+    rebuildPromise = (async () => {
+      try { await upgradeMissingStores(); }
+      catch (repairError) {
+        console.warn('No fue posible reparar únicamente la estructura del catálogo. Se reconstruirá IndexedDB conservando los datos críticos.', repairError);
+        await deleteDatabaseAndRestore();
+      }
+      console.warn(REBUILD_MESSAGE);
+      window.dispatchEvent(new CustomEvent('bennu:catalog-rebuilt', { detail: { message: REBUILD_MESSAGE } }));
+      if (client && navigator.onLine) {
+        try { await sync({ forceFull: true }); }
+        catch (error) {
+          console.error('La reconstrucción local terminó, pero falló la sincronización completa del catálogo.', error);
+          window.dispatchEvent(new CustomEvent('bennu:catalog-sync-error', { detail: { error } }));
+        }
+      }
+    })().finally(() => { rebuildPromise = null; });
+    return rebuildPromise;
+  }
   const all = name => store(name, 'readonly', s => req(s.getAll()));
   const putMany = (name, rows) => store(name, 'readwrite', s => { for (const row of rows) s.put(row); });
   const meta = async key => (await store('catalog_meta', 'readonly', s => req(s.get(key))))?.value || null;
@@ -126,5 +266,5 @@
   async function queueExistingEquipmentUpdate(request) { const record = { ...request, id: request.id || updateKey(request), createdAt: request.createdAt || new Date().toISOString(), attempts: request.attempts || 0 }; await store('pending_equipment_updates', 'readwrite', s => s.put(record)); return record; }
   async function flushPendingEquipmentUpdates() { if (!navigator.onLine) return []; const pending = await all('pending_equipment_updates'), results = []; for (const item of pending) { try { const updated = await updateExistingEquipment(item); await store('pending_equipment_updates', 'readwrite', s => s.delete(item.id)); results.push({ id: item.id, ok: true, equipment: updated }); window.dispatchEvent(new CustomEvent('bennu:equipment-update-synced', { detail: { ok: true, equipment: updated } })); } catch (error) { const saved = { ...item, attempts: (item.attempts || 0) + 1, lastAttempt: new Date().toISOString(), error: error.message }; await store('pending_equipment_updates', 'readwrite', s => s.put(saved)); results.push({ id: item.id, ok: false, error }); window.dispatchEvent(new CustomEvent('bennu:equipment-update-synced', { detail: { ok: false, message: error.message } })); } } return results; }
   function init(options) { client = options.supabase; }
-  window.BennuCatalog = { init, sync, fullSync: () => sync({ forceFull: true }), clients, equipment, lastSync: () => meta('last_catalog_sync'), findOrCreate, queueEquipment, flushPending, prepareReport, validateEquipmentConflicts, updateExistingEquipment, queueExistingEquipmentUpdate, flushPendingEquipmentUpdates, formatSyncError };
+  window.BennuCatalog = { init, sync, fullSync: () => sync({ forceFull: true }), clients, equipment, lastSync: () => meta('last_catalog_sync'), findOrCreate, queueEquipment, flushPending, prepareReport, validateEquipmentConflicts, updateExistingEquipment, queueExistingEquipmentUpdate, flushPendingEquipmentUpdates, formatSyncError, rebuildIndexedDb };
 })();
