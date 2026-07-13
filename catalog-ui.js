@@ -27,9 +27,81 @@
   function manualNewEquipment(showSave) { $('catalogEquipmentId').value = ''; originalEquipment = null; editingRegistered = false; setReadOnly(false); $('catalogSaveWrap').classList.toggle('hidden', !showSave || !$('catalogClientId').value); }
   function editManually() { if ($('catalogEquipmentId').value && originalEquipment) { editingRegistered = true; setReadOnly(false); $('catalogSaveWrap').classList.add('hidden'); return; } manualNewEquipment(false); }
   async function loadLocal() { allClients = await BennuCatalog.clients(); const select = $('catalogClient'), current = select.value; select.innerHTML = ''; select.add(option('Seleccione…', '')); for (const item of allClients) select.add(option(item.name, item.id)); select.add(option('+ Cliente no registrado', 'manual')); if ([...select.options].some(item => item.value === current)) select.value = current; }
-  const formatDate = value => value ? new Date(value).toLocaleString('es-CR') : 'Catálogo no disponible sin conexión';
-  async function refresh() { try { const result = await BennuCatalog.sync(); await loadLocal(); $('catalogStatus').textContent = 'Catálogo actualizado: ' + formatDate(result.at); } catch (_) { $('catalogStatus').textContent = 'No se pudo actualizar; se mantiene la copia local'; } }
-  async function init(options) { if (ready) return; ready = true; db = options.supabase; BennuCatalog.init({ supabase: db }); build(); await loadLocal(); $('catalogStatus').textContent = 'Catálogo actualizado: ' + formatDate(await BennuCatalog.lastSync()); if (navigator.onLine) refresh(); window.addEventListener('online', async () => { await BennuCatalog.flushPending().catch(() => {}); const results = await BennuCatalog.flushPendingEquipmentUpdates().catch(() => []); for (const result of results) alert(result.ok ? 'Equipo actualizado en el catálogo.' : 'No se pudo actualizar un equipo pendiente: ' + result.error.message); await refresh(); }); }
+  const formatDate = value => value ? new Intl.DateTimeFormat('es-CR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(value)) : null;
+  function localStatus() {
+    if (!allClients.length) return 'Catálogo vacío. Pulse “Actualizar catálogo”.';
+    return navigator.onLine ? 'Se utiliza la copia local del catálogo.' : 'Sin conexión; se utiliza el catálogo local.';
+  }
+  function showLocalCatalogStatus() { $('catalogStatus').textContent = localStatus(); }
+  function updateCatalogStatus(value) { const formatted = formatDate(value); $('catalogStatus').textContent = formatted ? 'Catálogo actualizado: ' + formatted : localStatus(); }
+  async function reloadCatalog(selectedClientId) {
+    await loadLocal();
+    const select = $('catalogClient');
+    if (selectedClientId && allClients.some(item => item.id === selectedClientId)) {
+      select.value = selectedClientId;
+      allEquipment = await BennuCatalog.equipment(selectedClientId);
+      $('catalogEquipment').disabled = false;
+      $('catalogSearch').classList.toggle('hidden', allEquipment.length <= 100);
+      renderEquipment();
+    }
+  }
+  async function refresh({ forceFull = true } = {}) {
+    const button = $('catalogRefresh'), selectedClientId = $('catalogClient')?.value || '';
+    if (button) { button.disabled = true; button.textContent = 'Actualizando catálogo…'; }
+    $('catalogStatus').textContent = 'Actualizando catálogo…';
+    try {
+      const result = await BennuCatalog.sync({ forceFull });
+      await reloadCatalog(selectedClientId);
+      updateCatalogStatus(result.at);
+      return result;
+    } catch (error) {
+      console.error('No se pudo actualizar el catálogo:', error);
+      $('catalogStatus').textContent = 'No se pudo actualizar; se mantiene la copia local.';
+      throw error;
+    } finally {
+      if (button) { button.disabled = false; button.textContent = 'Actualizar catálogo'; }
+    }
+  }
+  async function initializeCatalogData() {
+    await loadLocal();
+    const lastSync = await BennuCatalog.lastSync();
+    if (!navigator.onLine) { showLocalCatalogStatus(); return; }
+    let fullAttempted = false;
+    try {
+      let result;
+      if (!allClients.length) {
+        fullAttempted = true;
+        result = await BennuCatalog.sync({ forceFull: true });
+      } else {
+        result = await BennuCatalog.sync();
+      }
+      await loadLocal();
+      if (!allClients.length && !fullAttempted) {
+        fullAttempted = true;
+        result = await BennuCatalog.sync({ forceFull: true });
+        await loadLocal();
+      }
+      updateCatalogStatus(result?.at || lastSync);
+    } catch (error) {
+      console.error('No se pudo actualizar el catálogo:', error);
+      showLocalCatalogStatus();
+    }
+  }
+  async function init(options) {
+    if (ready) return;
+    ready = true;
+    db = options.supabase;
+    BennuCatalog.init({ supabase: db });
+    build();
+    await initializeCatalogData();
+    window.addEventListener('online', async () => {
+      await BennuCatalog.flushPending().catch(() => {});
+      const results = await BennuCatalog.flushPendingEquipmentUpdates().catch(() => []);
+      for (const result of results) alert(result.ok ? 'Equipo actualizado en el catálogo.' : 'No se pudo actualizar un equipo pendiente: ' + result.error.message);
+      await refresh({ forceFull: true }).catch(() => {});
+    });
+    window.addEventListener('offline', showLocalCatalogStatus);
+  }
   function capture() { return { clientId: $('catalogClientId')?.value || null, equipmentId: $('catalogEquipmentId')?.value || null, clientMode: $('catalogClient')?.value === 'manual' ? 'manual' : 'registered', equipmentMode: $('catalogEquipment')?.value === 'manual' ? 'manual' : 'registered', saveEquipment: !!$('catalogSaveEquipment')?.checked, pendingEquipmentLocalId: null, originalEquipment: originalEquipment ? { ...originalEquipment } : null, editingRegistered }; }
   async function restore(data) { if (!ready) return; await loadLocal(); if (data?.clientId && allClients.some(item => item.id === data.clientId)) { $('catalogClient').value = data.clientId; await onClient(); if (data.equipmentId && allEquipment.some(item => item.id === data.equipmentId)) { $('catalogEquipment').value = data.equipmentId; onEquipment(); if (data.originalEquipment) originalEquipment = { ...data.originalEquipment }; editingRegistered = !!data.editingRegistered; if (editingRegistered) setReadOnly(false); } else manualNewEquipment(false); } else { $('catalogClient').value = 'manual'; await onClient(); $('cliente').value = data?.cliente || $('cliente').value; } if ($('catalogSaveEquipment')) $('catalogSaveEquipment').checked = !!data?.saveEquipment; }
   async function prepare(data) {
