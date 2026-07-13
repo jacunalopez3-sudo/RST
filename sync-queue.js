@@ -1,7 +1,7 @@
 (() => {
   const DB_NAME = "bennu-service-reports";
   const STORE_NAME = "pending-reports";
-  const DB_VERSION = 2;
+  const DB_VERSION = 3;
   let flushing = false;
 
   function requestResult(request) {
