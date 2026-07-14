@@ -1,32 +1,157 @@
 (() => {
   const $ = id => document.getElementById(id);
-  let db, allClients = [], allEquipment = [], ready = false, originalEquipment = null, editingRegistered = false, rebuildNoticeUntil = 0, rebuildNoticeTimer = null;
+  let db, allClients = [], allEquipment = [], ready = false, originalEquipment = null, editingRegistered = false, rebuildNoticeUntil = 0, rebuildNoticeTimer = null, clientVisibleOptions = [], clientActiveIndex = -1, clientCloseTimer = null;
   const option = (text, value) => new Option(text, value);
   const normalizeCatalogValue = value => String(value || '').trim();
+  const normalizeClientSearch = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es').trim();
   const debounce = (fn, ms) => { let timer; return () => { clearTimeout(timer); timer = setTimeout(fn, ms); }; };
   const equipmentFields = () => [$('equipo'), $('marca'), $('modelo'), $('serie'), $('activo')];
   function setReadOnly(value) { equipmentFields().forEach(field => field.readOnly = value); }
   function snapshot(item) { return item ? { equipment_name: item.equipment_name || '', brand: item.brand || '', model: item.model || '', serial_number: item.serial_number || '', asset_number: item.asset_number || '' } : null; }
   function equipmentChanges(original, current) { const fields = { equipment_name: current.equipo, brand: current.marca, model: current.modelo, serial_number: current.serie, asset_number: current.activo }, changes = {}; for (const [key, value] of Object.entries(fields)) { const normalized = normalizeCatalogValue(value), before = normalizeCatalogValue(original?.[key]); if (normalized !== before) changes[key] = normalized || null; } return changes; }
+  function syncClientSearchValue(value) {
+    const input = $('catalogClientSearch');
+    if (!input) return;
+    const selected = value && value !== 'manual' ? allClients.find(item => item.id === value) : null;
+    input.value = value === 'manual' ? '+ Cliente no registrado' : selected?.name || '';
+    input.dataset.selectedValue = value || '';
+    input.setCustomValidity('');
+    input.setAttribute('aria-invalid', 'false');
+  }
+  function paintActiveClientOption() {
+    const input = $('catalogClientSearch'), list = $('catalogClientList');
+    if (!input || !list) return;
+    const buttons = [...list.querySelectorAll('[data-client-value]')];
+    buttons.forEach((button, index) => {
+      const active = index === clientActiveIndex;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+    const activeButton = buttons[clientActiveIndex];
+    if (activeButton) {
+      input.setAttribute('aria-activedescendant', activeButton.id);
+      activeButton.scrollIntoView({ block: 'nearest' });
+    } else {
+      input.removeAttribute('aria-activedescendant');
+    }
+  }
+  function renderClientOptions(term = null) {
+    const input = $('catalogClientSearch'), list = $('catalogClientList');
+    if (!input || !list) return;
+    const query = normalizeClientSearch(term === null ? input.value : term);
+    const matches = allClients.filter(item => !query || normalizeClientSearch(item.name).includes(query));
+    clientVisibleOptions = matches.map(item => ({ id: item.id, name: item.name, manual: false }));
+    clientVisibleOptions.push({ id: 'manual', name: '+ Cliente no registrado', manual: true });
+    clientActiveIndex = query ? -1 : clientVisibleOptions.findIndex(item => item.id === input.dataset.selectedValue);
+    list.replaceChildren();
+    if (!matches.length) {
+      const empty = document.createElement('div');
+      empty.className = 'catalog-client-empty';
+      empty.textContent = 'No se encontraron clientes';
+      list.append(empty);
+    }
+    clientVisibleOptions.forEach((item, index) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.id = 'catalogClientOption' + index;
+      button.className = 'catalog-client-option' + (item.manual ? ' manual' : '');
+      button.dataset.clientValue = item.id;
+      button.setAttribute('role', 'option');
+      button.setAttribute('aria-selected', 'false');
+      button.textContent = item.name;
+      list.append(button);
+    });
+    paintActiveClientOption();
+  }
+  function openClientOptions(showAll = false) {
+    clearTimeout(clientCloseTimer);
+    const input = $('catalogClientSearch'), list = $('catalogClientList');
+    renderClientOptions(showAll ? '' : null);
+    list.classList.remove('hidden');
+    input.setAttribute('aria-expanded', 'true');
+  }
+  function closeClientOptions() {
+    const input = $('catalogClientSearch'), list = $('catalogClientList');
+    if (!input || !list) return;
+    list.classList.add('hidden');
+    input.setAttribute('aria-expanded', 'false');
+    input.removeAttribute('aria-activedescendant');
+    clientActiveIndex = -1;
+  }
+  function moveActiveClientOption(step) {
+    if (!clientVisibleOptions.length) return;
+    clientActiveIndex = clientActiveIndex < 0 ? (step > 0 ? 0 : clientVisibleOptions.length - 1) : (clientActiveIndex + step + clientVisibleOptions.length) % clientVisibleOptions.length;
+    paintActiveClientOption();
+  }
+  async function selectClientOption(value) {
+    const select = $('catalogClient');
+    if (![...select.options].some(item => item.value === value)) return;
+    select.value = value;
+    closeClientOptions();
+    await onClient();
+  }
+  function invalidateClientSelection() {
+    const input = $('catalogClientSearch'), select = $('catalogClient');
+    select.value = '';
+    input.dataset.selectedValue = '';
+    input.setCustomValidity(input.value.trim() ? 'Seleccione un cliente de la lista.' : '');
+    input.setAttribute('aria-invalid', input.value.trim() ? 'true' : 'false');
+    $('catalogClientId').value = '';
+    $('cliente').value = '';
+    $('cliente').readOnly = true;
+    clearEquipment();
+    $('catalogEquipment').disabled = true;
+    $('catalogSearch').classList.add('hidden');
+    manualNewEquipment(false);
+  }
+  function onClientSearchKeydown(event) {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      if ($('catalogClientList').classList.contains('hidden')) openClientOptions(false);
+      moveActiveClientOption(event.key === 'ArrowDown' ? 1 : -1);
+      return;
+    }
+    if (event.key === 'Enter') {
+      const selected = clientVisibleOptions[clientActiveIndex] || clientVisibleOptions.find(item => !item.manual);
+      if (selected && !$('catalogClientList').classList.contains('hidden')) {
+        event.preventDefault();
+        selectClientOption(selected.id).catch(error => console.error('No se pudo seleccionar el cliente.', error));
+      }
+      return;
+    }
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeClientOptions();
+    }
+  }
   function build() {
     const clientInput = $('cliente'), clientWrap = clientInput.parentElement;
-    clientWrap.insertAdjacentHTML('afterbegin', '<label>Cliente registrado</label><select id="catalogClient"><option value="">Seleccione…</option><option value="manual">+ Cliente no registrado</option></select>');
+    clientWrap.insertAdjacentHTML('afterbegin', '<label>Cliente registrado</label><div id="catalogClientCombobox" class="catalog-client-combobox"><input id="catalogClientSearch" type="search" role="combobox" aria-autocomplete="list" aria-haspopup="listbox" aria-expanded="false" aria-controls="catalogClientList" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="Seleccione o busque un cliente"><select id="catalogClient" class="hidden" tabindex="-1" aria-hidden="true"><option value="">Seleccione…</option><option value="manual">+ Cliente no registrado</option></select><div id="catalogClientList" class="catalog-client-list hidden" role="listbox"></div></div>');
     clientInput.placeholder = 'Nombre del cliente'; clientInput.readOnly = true;
     const equipmentInput = $('equipo'), wrap = equipmentInput.parentElement;
     wrap.insertAdjacentHTML('afterbegin', '<label>Equipo registrado</label><select id="catalogEquipment" disabled><option value="">Seleccione cliente primero</option></select><input id="catalogSearch" class="hidden" placeholder="Buscar equipo, marca, modelo, serie o activo">');
     wrap.insertAdjacentHTML('beforeend', '<div class="btns"><button type="button" id="catalogManualEdit">Editar datos manualmente</button></div>');
     $('activo').parentElement.insertAdjacentHTML('beforeend', '<label id="catalogSaveWrap" class="hidden"><input id="catalogSaveEquipment" type="checkbox" style="width:auto"> Guardar este equipo para futuras visitas</label>');
     $('reporteForm').insertAdjacentHTML('afterbegin', '<input type="hidden" id="catalogClientId"><input type="hidden" id="catalogEquipmentId">');
-    $('catalogClient').onchange = onClient; $('catalogEquipment').onchange = onEquipment; $('catalogSearch').oninput = debounce(renderEquipment, 200); $('catalogManualEdit').onclick = editManually; $('catalogRefresh').onclick = refresh;
+    $('catalogClient').onchange = onClient;
+    const clientSearch = $('catalogClientSearch'), clientList = $('catalogClientList');
+    clientSearch.addEventListener('focus', () => { const hasSelection = !!clientSearch.dataset.selectedValue; if (hasSelection) clientSearch.select(); openClientOptions(hasSelection || !clientSearch.value); });
+    clientSearch.addEventListener('click', () => openClientOptions(!!clientSearch.dataset.selectedValue || !clientSearch.value));
+    clientSearch.addEventListener('input', () => { invalidateClientSelection(); openClientOptions(false); });
+    clientSearch.addEventListener('keydown', onClientSearchKeydown);
+    clientSearch.addEventListener('blur', () => { clientCloseTimer = setTimeout(closeClientOptions, 180); });
+    clientList.addEventListener('mousedown', event => event.preventDefault());
+    clientList.addEventListener('click', event => { const target = event.target.closest('[data-client-value]'); if (target) selectClientOption(target.dataset.clientValue).catch(error => console.error('No se pudo seleccionar el cliente.', error)); });
+    $('catalogEquipment').onchange = onEquipment; $('catalogSearch').oninput = debounce(renderEquipment, 200); $('catalogManualEdit').onclick = editManually; $('catalogRefresh').onclick = refresh;
   }
   function clearEquipment() { $('catalogEquipmentId').value = ''; $('catalogEquipment').value = ''; equipmentFields().forEach(field => field.value = ''); originalEquipment = null; editingRegistered = false; }
-  async function onClient() { const id = $('catalogClient').value; clearEquipment(); if (id === 'manual' || !id) { $('catalogClientId').value = ''; $('cliente').readOnly = false; $('cliente').value = id === 'manual' ? '' : $('cliente').value; $('catalogEquipment').disabled = true; manualNewEquipment(true); return; } const selected = allClients.find(item => item.id === id); $('catalogClientId').value = id; $('cliente').value = selected?.name || ''; $('cliente').readOnly = true; allEquipment = await BennuCatalog.equipment(id); $('catalogEquipment').disabled = false; $('catalogSearch').classList.toggle('hidden', allEquipment.length <= 100); renderEquipment(); }
+  async function onClient() { const id = $('catalogClient').value; syncClientSearchValue(id); clearEquipment(); if (id === 'manual' || !id) { $('catalogClientId').value = ''; $('cliente').readOnly = false; $('cliente').value = id === 'manual' ? '' : $('cliente').value; $('catalogEquipment').disabled = true; manualNewEquipment(true); return; } const selected = allClients.find(item => item.id === id); $('catalogClientId').value = id; $('cliente').value = selected?.name || ''; $('cliente').readOnly = true; allEquipment = await BennuCatalog.equipment(id); $('catalogEquipment').disabled = false; $('catalogSearch').classList.toggle('hidden', allEquipment.length <= 100); renderEquipment(); }
   function label(item) { return `${item.equipment_name || '-'} — ${[item.brand, item.model].filter(Boolean).join(' ') || '-'} — Serie: ${item.serial_number || '-'} — Activo: ${item.asset_number || '-'}`; }
   function renderEquipment() { const select = $('catalogEquipment'), current = select.value, term = ($('catalogSearch').value || '').toLowerCase(); select.innerHTML = ''; select.add(option('+ Equipo no registrado', 'manual')); for (const item of allEquipment.filter(x => !term || label(x).toLowerCase().includes(term)).slice(0, 50)) select.add(option(label(item), item.id)); if ([...select.options].some(item => item.value === current)) select.value = current; }
   function onEquipment() { const id = $('catalogEquipment').value; if (id === 'manual') { clearEquipment(); manualNewEquipment(true); return; } const item = allEquipment.find(entry => entry.id === id); if (!item) return; $('catalogEquipmentId').value = id; $('equipo').value = item.equipment_name || ''; $('marca').value = item.brand || ''; $('modelo').value = item.model || ''; $('serie').value = item.serial_number || ''; $('activo').value = item.asset_number || ''; originalEquipment = snapshot(item); editingRegistered = false; setReadOnly(true); $('catalogSaveWrap').classList.add('hidden'); }
   function manualNewEquipment(showSave) { $('catalogEquipmentId').value = ''; originalEquipment = null; editingRegistered = false; setReadOnly(false); $('catalogSaveWrap').classList.toggle('hidden', !showSave || !$('catalogClientId').value); }
   function editManually() { if ($('catalogEquipmentId').value && originalEquipment) { editingRegistered = true; setReadOnly(false); $('catalogSaveWrap').classList.add('hidden'); return; } manualNewEquipment(false); }
-  async function loadLocal() { allClients = await BennuCatalog.clients(); const select = $('catalogClient'), current = select.value; select.innerHTML = ''; select.add(option('Seleccione…', '')); for (const item of allClients) select.add(option(item.name, item.id)); select.add(option('+ Cliente no registrado', 'manual')); if ([...select.options].some(item => item.value === current)) select.value = current; }
+  async function loadLocal() { allClients = await BennuCatalog.clients(); const select = $('catalogClient'), current = select.value; select.innerHTML = ''; select.add(option('Seleccione…', '')); for (const item of allClients) select.add(option(item.name, item.id)); select.add(option('+ Cliente no registrado', 'manual')); if ([...select.options].some(item => item.value === current)) select.value = current; syncClientSearchValue(select.value); if ($('catalogClientSearch')?.getAttribute('aria-expanded') === 'true') renderClientOptions(); }
   const formatDate = value => value ? new Intl.DateTimeFormat('es-CR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(value)) : null;
   function localStatus() {
     if (!allClients.length) return 'Catálogo vacío. Pulse “Actualizar catálogo”.';
