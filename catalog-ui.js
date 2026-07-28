@@ -270,5 +270,84 @@
     catch (error) { if (error.code === 'EQUIPMENT_CONFLICT') { alert(error.message + '\nLos cambios se guardarán únicamente en este reporte.'); return BennuCatalog.prepareReport(data); } throw error; }
     return BennuCatalog.prepareReport(data);
   }
-  window.BennuCatalogUI = { init, capture, restore, prepare, equipmentChanges };
+  function normalizeCatalogText(value) {
+    return String(value ?? '').trim().toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ');
+  }
+  function catalogText(value) {
+    const text = String(value ?? '').trim().replace(/\s+/g, ' ');
+    return text || null;
+  }
+  async function syncUnregisteredClientToCatalog(reportData) {
+    if (reportData?.clientMode !== 'manual') return;
+    try {
+      const clientName = catalogText(reportData.cliente);
+      if (!clientName) return;
+
+      const clientsResult = await db.from('clients').select('id,name');
+      if (clientsResult.error) throw clientsResult.error;
+      const normalizedClientName = normalizeCatalogText(clientName);
+      let client = (clientsResult.data || []).find(item => normalizeCatalogText(item.name) === normalizedClientName);
+
+      if (!client) {
+        const createdClient = await db.from('clients').insert({ name: clientName, active: true }).select('id,name').single();
+        if (createdClient.error) throw createdClient.error;
+        client = createdClient.data;
+      }
+
+      const equipmentName = catalogText(reportData.equipo);
+      if (equipmentName) {
+        const equipmentResult = await db.from('equipment')
+          .select('id,equipment_name,brand,model,serial_number,asset_number')
+          .eq('client_id', client.id);
+        if (equipmentResult.error) throw equipmentResult.error;
+
+        const incoming = {
+          equipment_name: equipmentName,
+          brand: catalogText(reportData.marca),
+          model: catalogText(reportData.modelo),
+          serial_number: catalogText(reportData.serie),
+          asset_number: catalogText(reportData.activo)
+        };
+        const normalizedSerial = normalizeCatalogText(incoming.serial_number);
+        const normalizedAsset = normalizeCatalogText(incoming.asset_number);
+        let equipment = null;
+
+        if (normalizedSerial) {
+          equipment = (equipmentResult.data || []).find(item => normalizeCatalogText(item.serial_number) === normalizedSerial);
+        } else if (normalizedAsset) {
+          equipment = (equipmentResult.data || []).find(item => normalizeCatalogText(item.asset_number) === normalizedAsset);
+        } else {
+          equipment = (equipmentResult.data || []).find(item =>
+            normalizeCatalogText(item.equipment_name) === normalizeCatalogText(incoming.equipment_name) &&
+            normalizeCatalogText(item.brand) === normalizeCatalogText(incoming.brand) &&
+            normalizeCatalogText(item.model) === normalizeCatalogText(incoming.model)
+          );
+        }
+
+        if (!equipment) {
+          const createdEquipment = await db.from('equipment').insert({
+            client_id: client.id,
+            ...incoming,
+            active: true
+          });
+          if (createdEquipment.error) throw createdEquipment.error;
+        } else {
+          const emptyFields = {};
+          for (const [field, value] of Object.entries(incoming)) {
+            if (!normalizeCatalogText(equipment[field]) && normalizeCatalogText(value)) emptyFields[field] = value;
+          }
+          if (Object.keys(emptyFields).length) {
+            const updatedEquipment = await db.from('equipment').update(emptyFields).eq('id', equipment.id);
+            if (updatedEquipment.error) throw updatedEquipment.error;
+          }
+        }
+      }
+
+      await BennuCatalog.sync({ forceFull: true });
+      await loadLocal();
+    } catch (error) {
+      console.error('No se pudo incorporar el cliente no registrado al catálogo.', error);
+    }
+  }
+  window.BennuCatalogUI = { init, capture, restore, prepare, equipmentChanges, syncUnregisteredClientToCatalog };
 })();
