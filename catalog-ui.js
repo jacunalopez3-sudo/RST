@@ -314,9 +314,11 @@
 
         if (normalizedSerial) {
           equipment = (equipmentResult.data || []).find(item => normalizeCatalogText(item.serial_number) === normalizedSerial);
-        } else if (normalizedAsset) {
+        }
+        if (!equipment && normalizedAsset) {
           equipment = (equipmentResult.data || []).find(item => normalizeCatalogText(item.asset_number) === normalizedAsset);
-        } else {
+        }
+        if (!equipment) {
           equipment = (equipmentResult.data || []).find(item =>
             normalizeCatalogText(item.equipment_name) === normalizeCatalogText(incoming.equipment_name) &&
             normalizeCatalogText(item.brand) === normalizeCatalogText(incoming.brand) &&
