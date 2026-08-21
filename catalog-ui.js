@@ -327,12 +327,32 @@
         }
 
         if (!equipment) {
-          const createdEquipment = await db.from('equipment').insert({
+          const equipmentPayload = {
             client_id: client.id,
-            ...incoming,
+            equipment_name: incoming.equipment_name,
+            brand: incoming.brand,
+            model: incoming.model,
+            serial_number: incoming.serial_number,
+            asset_number: incoming.asset_number,
             active: true
-          });
-          if (createdEquipment.error) throw createdEquipment.error;
+          };
+          const { data: createdEquipment, error: equipmentError } = await db
+            .from('equipment')
+            .insert(equipmentPayload)
+            .select('id,client_id,equipment_name,brand,model,serial_number,asset_number')
+            .single();
+          if (equipmentError) {
+            console.error('Error creando equipo automático', {
+              code: equipmentError.code,
+              message: equipmentError.message,
+              details: equipmentError.details,
+              hint: equipmentError.hint,
+              clientId: client.id,
+              equipmentPayload
+            });
+            throw equipmentError;
+          }
+          if (!createdEquipment?.id) throw new Error('Supabase no devolvió el equipo creado.');
         } else {
           const emptyFields = {};
           for (const [field, value] of Object.entries(incoming)) {
@@ -348,7 +368,13 @@
       await BennuCatalog.sync({ forceFull: true });
       await loadLocal();
     } catch (error) {
-      console.error('No se pudo incorporar el cliente no registrado al catálogo.', error);
+      console.error('No se pudo incorporar el cliente no registrado al catálogo.', {
+        code: error?.code,
+        message: error?.message,
+        details: error?.details,
+        hint: error?.hint,
+        error
+      });
     }
   }
   window.BennuCatalogUI = { init, capture, restore, prepare, equipmentChanges, syncUnregisteredClientToCatalog };
