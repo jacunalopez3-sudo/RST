@@ -365,16 +365,22 @@
         }
       }
 
-      await BennuCatalog.sync({ forceFull: true });
-      await loadLocal();
+      Promise.resolve()
+        .then(() => BennuCatalog.sync({ forceFull: true }))
+        .then(() => loadLocal())
+        .catch(error => {
+          console.error('No se pudo refrescar el catálogo local.', error);
+        });
+      return true;
     } catch (error) {
-      console.error('No se pudo incorporar el cliente no registrado al catálogo.', {
+      console.error('No se pudo incorporar cliente/equipo al catálogo.', {
         code: error?.code,
         message: error?.message,
         details: error?.details,
         hint: error?.hint,
         error
       });
+      return false;
     }
   }
   window.BennuCatalogUI = { init, capture, restore, prepare, equipmentChanges, syncUnregisteredClientToCatalog };
