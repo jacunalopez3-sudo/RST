@@ -5,10 +5,10 @@
   const normalizeCatalogValue = value => String(value || '').trim();
   const normalizeClientSearch = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es').trim();
   const debounce = (fn, ms) => { let timer; return () => { clearTimeout(timer); timer = setTimeout(fn, ms); }; };
-  const equipmentFields = () => [$('equipo'), $('marca'), $('modelo'), $('serie'), $('activo')];
+  const equipmentFields = () => [$('equipo'), $('marca'), $('modelo'), $('serie'), $('activo'), $('contractNumber'), $('purchaseNumber')];
   function setReadOnly(value) { equipmentFields().forEach(field => field.readOnly = value); }
-  function snapshot(item) { return item ? { equipment_name: item.equipment_name || '', brand: item.brand || '', model: item.model || '', serial_number: item.serial_number || '', asset_number: item.asset_number || '' } : null; }
-  function equipmentChanges(original, current) { const fields = { equipment_name: current.equipo, brand: current.marca, model: current.modelo, serial_number: current.serie, asset_number: current.activo }, changes = {}; for (const [key, value] of Object.entries(fields)) { const normalized = normalizeCatalogValue(value), before = normalizeCatalogValue(original?.[key]); if (normalized !== before) changes[key] = normalized || null; } return changes; }
+  function snapshot(item) { return item ? { equipment_name: item.equipment_name || '', brand: item.brand || '', model: item.model || '', serial_number: item.serial_number || '', asset_number: item.asset_number || '', contract_number: item.contract_number || '', purchase_number: item.purchase_number || '' } : null; }
+  function equipmentChanges(original, current) { const fields = { equipment_name: current.equipo, brand: current.marca, model: current.modelo, serial_number: current.serie, asset_number: current.activo, contract_number: current.contractNumber, purchase_number: current.purchaseNumber }, changes = {}; for (const [key, value] of Object.entries(fields)) { const normalized = normalizeCatalogValue(value), before = normalizeCatalogValue(original?.[key]); if (normalized !== before) changes[key] = normalized || null; } return changes; }
   function syncClientSearchValue(value) {
     const input = $('catalogClientSearch');
     if (!input) return;
@@ -148,7 +148,7 @@
   async function onClient() { const id = $('catalogClient').value; syncClientSearchValue(id); clearEquipment(); if (id === 'manual' || !id) { $('catalogClientId').value = ''; $('cliente').readOnly = false; $('cliente').value = id === 'manual' ? '' : $('cliente').value; $('catalogEquipment').disabled = true; manualNewEquipment(true); return; } const selected = allClients.find(item => item.id === id); $('catalogClientId').value = id; $('cliente').value = selected?.name || ''; $('cliente').readOnly = true; allEquipment = await BennuCatalog.equipment(id); $('catalogEquipment').disabled = false; $('catalogSearch').classList.toggle('hidden', allEquipment.length <= 100); renderEquipment(); }
   function label(item) { return `${item.equipment_name || '-'} — ${[item.brand, item.model].filter(Boolean).join(' ') || '-'} — Serie: ${item.serial_number || '-'} — Activo: ${item.asset_number || '-'}`; }
   function renderEquipment() { const select = $('catalogEquipment'), current = select.value, term = ($('catalogSearch').value || '').toLowerCase(); select.innerHTML = ''; select.add(option('+ Equipo no registrado', 'manual')); for (const item of allEquipment.filter(x => !term || label(x).toLowerCase().includes(term)).slice(0, 50)) select.add(option(label(item), item.id)); if ([...select.options].some(item => item.value === current)) select.value = current; }
-  function onEquipment() { const id = $('catalogEquipment').value; if (id === 'manual') { clearEquipment(); manualNewEquipment(true); return; } const item = allEquipment.find(entry => entry.id === id); if (!item) return; $('catalogEquipmentId').value = id; $('equipo').value = item.equipment_name || ''; $('marca').value = item.brand || ''; $('modelo').value = item.model || ''; $('serie').value = item.serial_number || ''; $('activo').value = item.asset_number || ''; originalEquipment = snapshot(item); editingRegistered = false; setReadOnly(true); $('catalogSaveWrap').classList.add('hidden'); }
+  function onEquipment() { const id = $('catalogEquipment').value; if (id === 'manual') { clearEquipment(); manualNewEquipment(true); return; } const item = allEquipment.find(entry => entry.id === id); if (!item) return; $('catalogEquipmentId').value = id; $('equipo').value = item.equipment_name || ''; $('marca').value = item.brand || ''; $('modelo').value = item.model || ''; $('serie').value = item.serial_number || ''; $('activo').value = item.asset_number || ''; $('contractNumber').value = item.contract_number || ''; $('purchaseNumber').value = item.purchase_number || ''; originalEquipment = snapshot(item); editingRegistered = false; setReadOnly(true); $('catalogSaveWrap').classList.add('hidden'); }
   function manualNewEquipment(showSave) { $('catalogEquipmentId').value = ''; originalEquipment = null; editingRegistered = false; setReadOnly(false); $('catalogSaveWrap').classList.toggle('hidden', !showSave || !$('catalogClientId').value); }
   function editManually() { if ($('catalogEquipmentId').value && originalEquipment) { editingRegistered = true; setReadOnly(false); $('catalogSaveWrap').classList.add('hidden'); return; } manualNewEquipment(false); }
   async function loadLocal() { allClients = await BennuCatalog.clients(); const select = $('catalogClient'), current = select.value; select.innerHTML = ''; select.add(option('Seleccione…', '')); for (const item of allClients) select.add(option(item.name, item.id)); select.add(option('+ Cliente no registrado', 'manual')); if ([...select.options].some(item => item.value === current)) select.value = current; syncClientSearchValue(select.value); if ($('catalogClientSearch')?.getAttribute('aria-expanded') === 'true') renderClientOptions(); }
@@ -297,7 +297,7 @@
       const equipmentName = catalogText(reportData.equipo);
       if (equipmentName) {
         const equipmentResult = await db.from('equipment')
-          .select('id,equipment_name,brand,model,serial_number,asset_number')
+          .select('id,equipment_name,brand,model,serial_number,asset_number,contract_number,purchase_number')
           .eq('client_id', client.id);
         if (equipmentResult.error) throw equipmentResult.error;
 
@@ -306,7 +306,9 @@
           brand: catalogText(reportData.marca),
           model: catalogText(reportData.modelo),
           serial_number: catalogText(reportData.serie),
-          asset_number: catalogText(reportData.activo)
+          asset_number: catalogText(reportData.activo),
+          contract_number: catalogText(reportData.contractNumber),
+          purchase_number: catalogText(reportData.purchaseNumber)
         };
         const normalizedSerial = normalizeCatalogText(incoming.serial_number);
         const normalizedAsset = normalizeCatalogText(incoming.asset_number);
@@ -334,12 +336,14 @@
             model: incoming.model,
             serial_number: incoming.serial_number,
             asset_number: incoming.asset_number,
+            contract_number: incoming.contract_number,
+            purchase_number: incoming.purchase_number,
             active: true
           };
           const { data: createdEquipment, error: equipmentError } = await db
             .from('equipment')
             .insert(equipmentPayload)
-            .select('id,client_id,equipment_name,brand,model,serial_number,asset_number')
+            .select('id,client_id,equipment_name,brand,model,serial_number,asset_number,contract_number,purchase_number')
             .single();
           if (equipmentError) {
             console.error('Error creando equipo automático', {
