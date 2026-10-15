@@ -34,6 +34,12 @@ begin
   if old.status = 'completed'
      and old.pdf_path is not null
      and old.pdf_path is distinct from new.pdf_path then
+    if nullif(btrim(new.change_reason), '') is null then
+      raise exception 'change_reason is required when revising a completed report';
+    end if;
+    new.edit_count := coalesce(old.edit_count, 0) + 1;
+    new.edited_at := coalesce(new.edited_at, now());
+    new.edited_by := coalesce(new.edited_by, auth.uid());
     insert into public.service_report_versions
       (report_id, version_number, changed_by, change_reason, snapshot, pdf_path, signature_path)
     values
